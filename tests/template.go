@@ -2,7 +2,7 @@ package data
 
 import (
 	"github.com/olivere/elastic/v7"
-	"github.com/pinguo-icc/salad-effect/internal/infrastructure/dao"
+	"github.com/guzhongzhi/go-dao/dao"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )

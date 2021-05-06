@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/olivere/elastic/v7"
-	"github.com/pinguo-icc/salad-effect/internal/infrastructure/repository"
 	"reflect"
 )
 
@@ -104,7 +103,7 @@ func (s *elasticsearch) Find(opts interface{}, data interface{}) error {
 	}
 
 	if !isSlice && rs.Hits.TotalHits.Value == 0 {
-		return repository.ErrNotFound
+		return nil 
 	}
 
 	for _, it := range rs.Hits.Hits {

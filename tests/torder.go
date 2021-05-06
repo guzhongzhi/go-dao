@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 	"fmt"
-	"github.com/pinguo-icc/salad-effect/internal/infrastructure/dao"
+	"github.com/guzhongzhi/go-dao/dao"
 )
 
 type TOrderFindOptions struct {
