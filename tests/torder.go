@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 	"fmt"
-	"github.com/guzhongzhi/go-dao/dao"
+	"github.com/guzhongzhi/micro/micro/dao"
 )
 
 type TOrderFindOptions struct {
