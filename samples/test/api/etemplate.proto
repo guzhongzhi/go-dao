@@ -1,0 +1,330 @@
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "github.com/srikrsna/protoc-gen-gotag/tagger/tagger.proto";
+
+package api;
+
+option go_package = "github.com/pinguo-icc/salad-effect/api";
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message Classify {
+    string id = 1;
+    string value = 2;
+    string icon = 3;
+}
+message ETemplateNodeEffect {
+    string id = 1;
+    bool vip = 2;
+}
+message ETemplateNode {
+    string id = 1;
+    string name = 2;
+    string thumbnail = 3;
+    repeated ETemplateNodeEffect effects = 4;
+    repeated Classify classify = 5;
+}
+
+message ETemplate {
+    enum ETemplateStatus {
+        Offline = 0; // 下线
+        Online = 1; // 上线
+        Earsed = 2; // 抹除
+        Draft = 3; // 草稿
+    }
+
+    message UpsertRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+        string Name = 2 [(tagger.tags) = 'json:"name"', (gogoproto.moretags) = 'form:"name" validate:"required"'];
+        string BGM = 3 [(tagger.tags) = 'json:"bgm"', (gogoproto.moretags) = 'form:"bgm" validate:"required"'];
+        uint32 BGMStartedAt = 4 [(tagger.tags) = 'json:"bgm_started_at"', (gogoproto.moretags) = 'form:"bgm_started_at" validate:"required"'];
+        string PublishedArea = 5 [(tagger.tags) = 'json:"published_area"', (gogoproto.moretags) = 'form:"published_area" validate:"required"'];
+        repeated Base Bases = 16 [(tagger.tags) = 'json:"bases"', (gogoproto.moretags) = 'form:"bases" validate:"required,gt=0,dive,required"'];
+        repeated SubEffect SubEffects = 17 [(tagger.tags) = 'json:"sub_effects"', (gogoproto.moretags) = 'form:"sub_effects" validate:"required,gt=0,dive,required"'];
+    }
+
+    message PublishRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+    }
+
+    message OffRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+    }
+
+    message RemoveRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+    }
+
+    message UpdatePublishedAreaRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+        string PublishedArea = 2 [(tagger.tags) = 'json:"published_area"', (gogoproto.moretags) = 'form:"published_area" validate:"required"'];
+    }
+
+    message Request {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+    }
+
+    message ViewRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+    }
+
+    message ListRequest {
+        string Keyword = 1 [(tagger.tags) = 'json:"keyword"', (gogoproto.moretags) = 'form:"keyword"'];
+        int64 Page = 2 [(tagger.tags) = 'json:"page"', (gogoproto.moretags) = 'form:"page"'];
+        int64 PerPage = 3 [(tagger.tags) = 'json:"per_page"', (gogoproto.moretags) = 'form:"per_page"'];
+    }
+
+    message ListResponse {
+        int64 Page = 1 [(tagger.tags) = 'json:"page"'];
+        int64 PerPage = 2 [(tagger.tags) = 'json:"per_page"'];
+        int64 Total = 3 [(tagger.tags) = 'json:"total"'];
+        repeated ETemplate Items = 4 [(tagger.tags) = 'json:"items"'];
+    }
+
+    message Base {
+        string Language = 1 [(tagger.tags) = 'json:"language"', (gogoproto.moretags) = 'form:"language" validate:"required"'];
+        string HomepageCover = 2 [(tagger.tags) = 'json:"homepage_cover"', (gogoproto.moretags) = 'form:"homepage_cover" validate:"required"'];
+        string EditCover = 3 [(tagger.tags) = 'json:"edit_cover"', (gogoproto.moretags) = 'form:"edit_cover" validate:"required"'];
+        repeated Demo Demos = 4 [(tagger.tags) = 'json:"demos"', (gogoproto.moretags) = 'form:"demos" validate:"required,gt=0,dive,required"'];
+    }
+
+    message Demo {
+        string Video = 1 [(tagger.tags) = 'json:"video"', (gogoproto.moretags) = 'form:"demo" validate:"required"'];
+        string VideoCover = 2 [(tagger.tags) = 'json:"video_cover"', (gogoproto.moretags) = 'form:"video_cover" validate:"required"'];
+    }
+
+    message SubEffect {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id" validate:"required"'];
+        string Name = 2 [(tagger.tags) = 'json:"name"'];
+        bool IsVIP = 3 [(tagger.tags) = 'json:"is_vip"', (gogoproto.moretags) = 'form:"is_vip" validate:"required"'];
+        bool IsOnline = 4 [(tagger.tags) = 'json:"is_online"', (gogoproto.moretags) = 'form:"is_online" validate:"required"'];
+        uint32 Sort = 5 [(tagger.tags) = 'json:"sort"', (gogoproto.moretags) = 'form:"sort"'];
+    }
+
+    message AggregationListRequest {
+        string countryCode = 1 [(tagger.tags) = 'json:"country_code"', (gogoproto.moretags) = 'form:"country_code" validate:"required"'];
+        string platform = 2 [(tagger.tags) = 'json:"platform"', (gogoproto.moretags) = 'form:"platform" validate:"required"'];
+        string language = 3 [(tagger.tags) = 'json:"language"', (gogoproto.moretags) = 'form:"language" validate:"required"'];
+    }
+
+    message AggregationListResponse {
+        repeated Classify classifyList = 1 [(tagger.tags) = 'json:"classifyList"'];
+        repeated ETemplateNode effectTemplates = 2 [(tagger.tags) = 'json:"effectTemplates"'];
+    }
+
+    string ID = 1 [(tagger.tags) = 'json:"id"'];
+    string Name = 2 [(tagger.tags) = 'json:"name"'];
+    string BGM = 3 [(tagger.tags) = 'json:"bgm"'];
+    uint32 BGMStartedAt = 4 [(tagger.tags) = 'json:"bgm_started_at"'];
+    string PublishedArea = 5 [(tagger.tags) = 'json:"published_area"'];
+    ETemplateStatus Status = 6 [(tagger.tags) = 'json:"status"'];
+    repeated Base Bases = 16 [(tagger.tags) = 'json:"bases"'];
+    repeated SubEffect SubEffects = 17 [(tagger.tags) = 'json:"sub_effects"'];
+}
+
+message SubEffect {
+    message UpsertRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+        string CustomID = 2 [(tagger.tags) = 'json:"custom_id"', (gogoproto.moretags) = 'form:"custom_id" validate:"required"'];
+        string RDCode = 3 [(tagger.tags) = 'json:"rd_code"', (gogoproto.moretags) = 'form:"rd_code" validate:"required"'];
+        string EffectFile = 4 [(tagger.tags) = 'json:"effect_file"', (gogoproto.moretags) = 'form:"effect_file" validate:"required"'];
+        string UnityVersion = 5 [(tagger.tags) = 'json:"unity_version"', (gogoproto.moretags) = 'form:"unity_version" validate:"required"'];
+        repeated Item Items = 16 [(tagger.tags) = 'json:"items"', (gogoproto.moretags) = 'form:"items" validate:"required"'];
+    }
+
+    message ViewRequest {
+        string ID = 1 [(tagger.tags) = 'json:"id"', (gogoproto.moretags) = 'form:"id"'];
+    }
+
+    message ListRequest {
+        string Keyword = 1 [(tagger.tags) = 'json:"keyword"', (gogoproto.moretags) = 'form:"keyword"'];
+        int64 Page = 2 [(tagger.tags) = 'json:"page"', (gogoproto.moretags) = 'form:"page"'];
+        int64 PerPage = 3 [(tagger.tags) = 'json:"per_page"', (gogoproto.moretags) = 'form:"per_page"'];
+    }
+
+    message ListResponse {
+        int64 Page = 1 [(tagger.tags) = 'json:"page"'];
+        int64 PerPage = 2 [(tagger.tags) = 'json:"per_page"'];
+        int64 Total = 3 [(tagger.tags) = 'json:"total"'];
+        repeated SubEffect Items = 4 [(tagger.tags) = 'json:"items"'];
+    }
+
+    message Item {
+        string Name = 1 [(tagger.tags) = 'json:"name"', (gogoproto.moretags) = 'form:"name" validate:"required"'];
+        string Label = 2 [(tagger.tags) = 'json:"label"', (gogoproto.moretags) = 'form:"label" validate:"required"'];
+        bool Adjustable = 3 [(tagger.tags) = 'json:"adjustable"', (gogoproto.moretags) = 'form:"adjustable"'];
+        string Mode = 4 [(tagger.tags) = 'json:"mode"', (gogoproto.moretags) = 'form:"mode" validate:"required"'];
+        float X = 5 [(tagger.tags) = 'json:"x"', (gogoproto.moretags) = 'form:"x"'];
+        float Y = 6 [(tagger.tags) = 'json:"y"', (gogoproto.moretags) = 'form:"y"'];
+        float Z = 7 [(tagger.tags) = 'json:"z"', (gogoproto.moretags) = 'form:"z"'];
+        float Default = 8 [(tagger.tags) = 'json:"default"', (gogoproto.moretags) = 'form:"default"'];
+    }
+
+    string ID = 1 [(tagger.tags) = 'json:"id"'];
+    string CustomID = 2 [(tagger.tags) = 'json:"custom_id"'];
+    string RDCode = 3 [(tagger.tags) = 'json:"rd_code"'];
+    string EffectFile = 4 [(tagger.tags) = 'json:"effect_file"'];
+    string UnityVersion = 5 [(tagger.tags) = 'json:"unity_version"'];
+    repeated Item Items = 16 [(tagger.tags) = 'json:"items"'];
+}
+
+service ETemplateService {
+    rpc Create (ETemplate.UpsertRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          post: "/v1/e-templates"
+        };
+    };
+
+    rpc Publish (ETemplate.PublishRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          put: "/v1/e-templates/{ID}/publication"
+        };
+    };
+
+    rpc Off (ETemplate.OffRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          put: "/v1/e-templates/{ID}/offline"
+        };
+    };
+
+    rpc Remove (ETemplate.RemoveRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          put: "/v1/e-templates/{ID}/remove"
+        };
+    };
+
+    rpc UpdatePublishedArea (ETemplate.UpdatePublishedAreaRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          put: "/v1/e-templates/{ID}/published-area"
+        };
+    };
+
+    rpc Update (ETemplate.UpsertRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          put: "/v1/e-templates/{ID}"
+        };
+    };
+
+    rpc View (ETemplate.ViewRequest) returns (ETemplate) {
+        option (google.api.http) = {
+          get: "/v1/e-templates/{ID}"
+        };
+    };
+
+    rpc List (ETemplate.ListRequest) returns (ETemplate.ListResponse) {
+        option (google.api.http) = {
+          get: "/v1/e-templates"
+        };
+    };
+
+    //客户端用,数据聚合
+    rpc AggregationListSequences (ETemplate.AggregationListRequest) returns (ETemplate.AggregationListResponse) {
+        option (google.api.http) = {
+          get: "/v1/e-templates/aggregation/sequences"
+        };
+    };
+
+    rpc AggregationView (AggregationViewRequest) returns (AggregationViewResponse) {
+        option (google.api.http) = {
+          get: "/v1/e-templates/aggregation/view/{id}"
+        };
+    };
+}
+message AggregationViewRequest {
+    string id = 1;
+    string language = 2;
+}
+
+message AggregationViewResponse {
+    message Resolution {
+        string jsonClass = 1;
+        int32 width = 2;
+        int32 height = 3;
+    }
+    message ResolutionUri {
+        string jsonClass = 1;
+        string uri = 2;
+        Resolution resolution = 3;
+        string etag = 4;
+    }
+    message Material {
+        string jsonClass = 1;
+        string uri = 2;
+        repeated ResolutionUri resolutionUris = 3;
+    }
+    message Info {
+        string v = 1;
+        string uri = 2;
+        string etag = 3;
+    }
+    message Mask {
+        float x = 1;
+        float y = 2;
+        float width = 3;
+        float height = 4;
+    }
+    message ResourceMask {
+        int32 width = 1;
+        int32 height = 2;
+        Mask mask = 3;
+    }
+    message ShaderParam {
+        int32 paramType = 1;
+        string paramKey = 2;
+        string paramValue = 3;
+        string paramTag = 4;
+        string UIType = 5; // SubEffectItem.AdjustableSetting.AdjustableMode
+        string UIName = 6; //SubEffectItem.Label
+        float UIMin = 7; //DegreeSetting.X
+        float UIMid = 8; //DegreeSetting.Y
+        float UIMax = 9; //DegreeSetting.Z
+        float UIDefault = 10; //DegreeSetting.Default
+        float paramValueMin = 11; //暂时不管
+        float paramValueMax = 12; //暂时不管
+    }
+    message Music {
+        string id = 1;
+        string name = 2;
+        string url = 3;
+        float start = 4; //1.2  开始时间秒
+    }
+    string id = 1;
+    string key = 2;
+    float from = 3;
+    float to = 4;
+    string uri = 5;
+    string etag = 6;
+    Info info = 7;
+    repeated Material materials = 8;
+}
+
+service SubEffectService {
+    rpc Create (SubEffect.UpsertRequest) returns (SubEffect) {
+        option (google.api.http) = {
+          post: "/v1/sub-effects"
+          body: "*"
+        };
+    };
+
+    rpc Update (SubEffect.UpsertRequest) returns (SubEffect) {
+        option (google.api.http) = {
+          put: "/v1/sub-effects/{ID}"
+        };
+    };
+
+    rpc View (SubEffect.ViewRequest) returns (SubEffect) {
+        option (google.api.http) = {
+          get: "/v1/sub-effects/{ID}"
+        };
+    };
+
+    rpc List (SubEffect.ListRequest) returns (SubEffect.ListResponse) {
+        option (google.api.http) = {
+          get: "/v1/sub-effects"
+        };
+    };
+}
