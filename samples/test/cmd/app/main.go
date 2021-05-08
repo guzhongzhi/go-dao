@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"github.com/guzhongzhi/gmicro/config"
 	"github.com/guzhongzhi/gmicro/console"
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
 	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
 	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc"
 	"os"
 	"path"
 )
@@ -41,6 +43,9 @@ func main() {
 		}
 
 		serverConfig := server.NewConfig(server.GRPCAddrOption(cfg.ServerConfig().GRPC.Addr),
+			server.GRPCServerOption(grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+				return handler(ctx, req)
+			})),
 			server.HTTPPluginsOption(cfg.ServerConfig().HTTP.Plugins),
 			server.HTTPAddrOption(cfg.ServerConfig().HTTP.Addr))
 
