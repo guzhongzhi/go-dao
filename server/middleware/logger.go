@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	logger2 "github.com/pinguo-icc/salad-effect/internal/infrastructure/logger"
+	logger2 "github.com/guzhongzhi/gmicro/logger"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
