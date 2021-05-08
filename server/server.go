@@ -2,64 +2,17 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/pinguo-icc/salad-effect/internal/infrastructure/logger"
+	"github.com/pinguo-icc/salad-effect/internal/infrastructure/server/middleware"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
-
-func allowCORS(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if origin := r.Header.Get("Origin"); origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
-				return
-			}
-		}
-		h.ServeHTTP(w, r)
-	})
-}
-
-type Option func(opts *Config)
-
-type Config struct {
-	GRPCAddr          string
-	GRPCServerOptions []grpc.ServerOption
-	Timeout           time.Duration
-	HTTPAddr          string
-	Handlers          []http.Handler
-}
-
-func DefaultOptions() *Config {
-	return &Config{
-		GRPCAddr:          "0.0.0.0:9000",
-		GRPCServerOptions: make([]grpc.ServerOption, 0),
-		HTTPAddr:          "0.0.0.0:8000",
-		Handlers:          make([]http.Handler, 0),
-	}
-}
-
-func NewOptions(opts ...Option) *Config {
-	o := DefaultOptions()
-	for _, opt := range opts {
-		opt(o)
-	}
-	return o
-}
-
-func GRPCAddrOption(v string) Option {
-	return func(opts *Config) {
-		opts.GRPCAddr = v
-	}
-}
-
-func HTTPAddrOption(v string) Option {
-	return func(opts *Config) {
-		opts.HTTPAddr = v
-	}
-}
 
 type Registry interface {
 	Register(mux *runtime.ServeMux, server *grpc.Server)
@@ -70,52 +23,83 @@ type Server struct {
 	register   Registry
 	grpcServer *grpc.Server
 	httpServer *http.Server
+	logger     logger.SuperLogger
+	sysSig     chan os.Signal
 }
 
 func (s *Server) Stop(ctx context.Context) error {
+	s.logger.Infof("start to stop servers")
 	s.grpcServer.Stop()
-	return s.httpServer.Close()
+	s.httpServer.Close()
+	return nil
 }
 
-func (s *Server) Serve() error {
-	grpcListener, err := net.Listen("tcp", s.config.GRPCAddr)
-	if err != nil {
-		panic(err)
-	}
-	s.grpcServer = grpc.NewServer(s.config.GRPCServerOptions...)
-
-	mux := runtime.NewServeMux()
-	s.register.Register(mux, s.grpcServer)
-
-	s.httpServer = &http.Server{
-		Addr:    s.config.HTTPAddr,
-		Handler: mux,
-	}
-
-	sig := make(chan error, 1)
-	go func() {
-		err := s.grpcServer.Serve(grpcListener)
-		sig <- err
-	}()
-	go func() {
-		err := s.httpServer.ListenAndServe()
-		sig <- err
-	}()
-
-	fmt.Println(fmt.Sprintf("grpc listen: %s", s.config.GRPCAddr))
-	fmt.Println(fmt.Sprintf("http listen: %s", s.config.HTTPAddr))
-	select {
-	case err = <-sig:
-		panic(err)
-	default:
-
+func (s *Server) syscall() error {
+	signal.Notify(s.sysSig, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
+	for {
+		sig := <-s.sysSig
+		switch sig {
+		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			s.Stop(context.Background())
+			time.Sleep(time.Second * 2)
+			s.logger.Infof("servers are stopped")
+			os.Exit(0)
+		case syscall.SIGHUP:
+		default:
+			return nil
+		}
 	}
 	return nil
 }
 
-func NewServer(options *Config, register Registry) *Server {
+func (s *Server) Serve() error {
+	grpcListener, err := net.Listen("tcp", s.config.GRPC.Addr)
+	if err != nil {
+		panic(err)
+	}
+	s.grpcServer = grpc.NewServer(s.config.GRPC.Options...)
+
+	mux := runtime.NewServeMux()
+	s.register.Register(mux, s.grpcServer)
+
+	var httpHandler = http.Handler(mux)
+	for _, name := range s.config.HTTP.Plugins {
+		if fn, ok := middleware.Middlewares[name]; ok {
+			httpHandler = fn(httpHandler, s.logger)
+		}
+	}
+
+	s.httpServer = &http.Server{
+		Addr:    s.config.HTTP.Addr,
+		Handler: httpHandler,
+	}
+
+	go func() {
+		err := s.grpcServer.Serve(grpcListener)
+		if err != nil {
+			s.logger.Infof("grpc error: %s", err.Error())
+		}
+		s.logger.Infof("grpc server stopped")
+
+	}()
+	go func() {
+		err := s.httpServer.ListenAndServe()
+		if err != nil {
+			s.logger.Info(err.Error())
+		}
+	}()
+
+	s.logger.Infof("grpc listen: %s", s.config.GRPC.Addr)
+	s.logger.Infof("http listen: %s", s.config.HTTP.Addr)
+
+	return s.syscall()
+}
+
+func NewServer(config *Config, register Registry, logger logger.SuperLogger) *Server {
 	return &Server{
-		config:   options,
+		config:   config,
 		register: register,
+		logger:   logger,
+		sysSig:   make(chan os.Signal, 1),
 	}
 }
