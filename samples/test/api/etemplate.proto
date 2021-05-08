@@ -30,8 +30,8 @@ message UpsertResponse {
 service SubEffectService {
     rpc Create (UpsertRequest) returns (UpsertResponse) {
         option (google.api.http) = {
-          post: "/v1/sub-effects"
-          body: "*"
+          get: "/v1/sub-effects"
+          //body: "*"
         };
     };
 

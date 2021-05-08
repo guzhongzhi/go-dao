@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/pinguo-icc/salad-effect/internal/infrastructure/logger"
-	"github.com/pinguo-icc/salad-effect/internal/infrastructure/server/middleware"
+	"github.com/guzhongzhi/gmicro/logger"
+	"github.com/guzhongzhi/gmicro/server/middleware"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
