@@ -45,6 +45,12 @@ func NewConfig(opts ...Option) *Config {
 	return o
 }
 
+func GRPCServerOption(opt ...grpc.ServerOption) Option {
+	return func(opts *Config) {
+		opts.GRPC.Options = append(opts.GRPC.Options, opt...)
+	}
+}
+
 func GRPCAddrOption(v string) Option {
 	return func(opts *Config) {
 		opts.GRPC.Addr = v
