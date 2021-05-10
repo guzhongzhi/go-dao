@@ -3,5 +3,7 @@ package logger
 import "github.com/sirupsen/logrus"
 
 func Default() SuperLogger {
-	return logrus.New()
+	log := logrus.New()
+	log.SetLevel(logrus.DebugLevel)
+	return log
 }

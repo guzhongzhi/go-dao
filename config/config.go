@@ -3,8 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/guzhongzhi/gmicro/logger"
 	"os"
-	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -16,14 +17,50 @@ const (
 	EnvProd = "prod"
 )
 
-func LoadConfigByFiles(path, env string, bootstrap interface{}) (error) {
-	configDir := filepath.Join(filepath.Dir(filepath.Dir(os.Args[0])), "configs")
+func LoadConfigByFiles(path, env string, bootstrap interface{}, logger logger.SuperLogger) (error) {
 
-	err := readConfigFiles(env, configDir, bootstrap)
+	err := readConfigFiles(env, path, bootstrap, logger)
 	return err
 }
 
-func readConfigFiles(env, dir string, out interface{}) error {
+func generateCfgKeys(t reflect.Type, parentPath string) map[string]reflect.Type {
+	names := make(map[string]reflect.Type)
+
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		fmt.Println("t.Kind() 1", t.Kind())
+		return names
+	}
+
+	fieldNum := t.NumField()
+	for i := 0; i < fieldNum; i++ {
+		fieldName := t.Field(i).Name
+		fullFieldName := parentPath
+		if fullFieldName != "" {
+			fullFieldName += "/" + fieldName
+		} else {
+			fullFieldName = fieldName
+		}
+
+		st := t.Field(i).Type
+		if st.Kind() == reflect.Ptr {
+			st = st.Elem()
+		}
+		if st.Kind() == reflect.Struct {
+			subNames := generateCfgKeys(st, fullFieldName)
+			for key, t := range subNames {
+				names[key] = t
+			}
+		} else {
+			names[fullFieldName] = st
+		}
+	}
+	return names
+}
+
+func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger) error {
 	if env != EnvDev && env != EnvQA && env != EnvProd {
 		return errors.New("invalid env param")
 	}
@@ -43,8 +80,12 @@ func readConfigFiles(env, dir string, out interface{}) error {
 		viper.MergeConfigMap(envViper.AllSettings())
 	}
 
-	for _, key := range viper.AllKeys() {
-		envName := strings.Replace(strings.ToUpper(key), ".", "_", -1)
+	t := reflect.TypeOf(out)
+	keys := generateCfgKeys(t, "")
+
+	for key, t := range keys {
+		envName := strings.Replace(strings.ToUpper(key), "/", "_", -1)
+		logger.Debug(envName, " ", t.Kind(), " ", t.Name())
 		if os.Getenv(envName) == "" {
 			continue
 		}
@@ -54,7 +95,7 @@ func readConfigFiles(env, dir string, out interface{}) error {
 		case string:
 			viper.Set(key, os.Getenv(envName))
 		default:
-			fmt.Println("unsupport env value data type")
+			panic(fmt.Errorf("unsupport ENV data type '%v' for the field of '%s'", t.Kind(), envName))
 		}
 	}
 	return viper.Unmarshal(out)

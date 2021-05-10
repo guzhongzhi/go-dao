@@ -36,7 +36,7 @@ func main() {
 		cfgPath := ctx.String("config")
 
 		cfg := &infrastructure.Bootstrap{}
-		err := config.LoadConfigByFiles(cfgPath, env, cfg)
+		err := config.LoadConfigByFiles(cfgPath, env, cfg, logger.Default())
 		if err != nil {
 			panic(err)
 			os.Exit(1)
