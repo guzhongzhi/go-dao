@@ -30,7 +30,6 @@ func generateCfgKeys(t reflect.Type, parentPath string) map[string]reflect.Type 
 		t = t.Elem()
 	}
 	if t.Kind() != reflect.Struct {
-		fmt.Println("t.Kind() 1", t.Kind())
 		return names
 	}
 
