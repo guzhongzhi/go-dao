@@ -15,7 +15,7 @@ import (
 
 func TestTemplate(t *testing.T) {
 
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", "root", "root", "tcp", "127.0.0.1", 3306, "bmall")
+	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", "root", "AyXwZhBf0nGlKxJf", "tcp", "118.31.246.195", 3306, "bmall")
 	DB, err := sql.Open("mysql", dsn)
 
 	if err != nil {
@@ -33,7 +33,7 @@ func TestTemplate(t *testing.T) {
 	findOpts1 := &TOrderFindOptions{}
 
 	torders := make([]TOrder, 0)
-	err00 := torder.Find(findOpts1, &torders)
+	err00 := torder.Find(&torders, findOpts1)
 
 	fmt.Println("torderstorderstorderstorderstorders len: ", len(torders), fmt.Sprintf("%#v", torders))
 
@@ -63,7 +63,7 @@ func TestTemplate(t *testing.T) {
 	dao2 := NewMTemplateDAO(db, es)
 
 	tt := &ESTemplate{}
-	err = dao2.e.Get("mcYdInkBIAk9r5vbgNCa", tt)
+	err = dao2.e.Get("mcYdInkBIAk9r5vbgNCa", tt, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,7 @@ func TestTemplate(t *testing.T) {
 	findOpts := NewMongodbFindOptions()
 	data2 := make([]*MTemplate, 0)
 
-	err = dao2.Find(findOpts, &data2)
+	err = dao2.Find(&data2, findOpts)
 	if err != nil {
 		panic(err)
 	}

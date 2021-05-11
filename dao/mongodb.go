@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"fmt"
+	options2 "github.com/guzhongzhi/gmicro/dao/options"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,7 +14,7 @@ type MongodbDAO interface {
 	Collection() *mongo.Collection
 }
 
-func NewMongodbDAO(db *mongo.Database, tableName string, opts CollectionOptions) MongodbDAO {
+func NewMongodbDAO(db *mongo.Database, tableName string, opts options.CollectionOptions) MongodbDAO {
 	return &mongodb{
 		coll: db.Collection(tableName),
 	}
@@ -27,7 +28,7 @@ func (s *mongodb) Collection() *mongo.Collection {
 	return s.coll
 }
 
-func (s *mongodb) Delete(id interface{}) error {
+func (s *mongodb) Delete(id interface{}, opts options2.DeleteOptions) error {
 	_, err := s.coll.DeleteOne(context.Background(), primitive.M{"_id": id})
 	if err != nil {
 		return err
@@ -35,12 +36,12 @@ func (s *mongodb) Delete(id interface{}) error {
 	return nil
 }
 
-func (s *mongodb) Get(id interface{}, data Entity) error {
+func (s *mongodb) Get(id interface{}, data Entity, opts options2.GetOptions) error {
 	rs := s.coll.FindOne(context.Background(), primitive.M{"_id": id})
 	return rs.Decode(data)
 }
 
-func (s *mongodb) Insert(entity Entity, opts InsertOptions) (id interface{}, err error) {
+func (s *mongodb) Insert(entity Entity, opts options2.InsertOptions) (id interface{}, err error) {
 	if !entity.IsNew() {
 		return nil, fmt.Errorf("collection '%s' insert error, the data is not a new record", s.coll.Name())
 	}
@@ -53,7 +54,7 @@ func (s *mongodb) Insert(entity Entity, opts InsertOptions) (id interface{}, err
 	return rs.InsertedID, err
 }
 
-func (s *mongodb) Update(id interface{}, data Entity, updateOptions UpdateOptions) error {
+func (s *mongodb) Update(id interface{}, data Entity, updateOptions options2.UpdateOptions) error {
 	_, err := s.coll.UpdateOne(context.Background(), primitive.M{
 		"_id": id,
 	}, primitive.M{"$set": data})
@@ -63,15 +64,14 @@ func (s *mongodb) Update(id interface{}, data Entity, updateOptions UpdateOption
 	return nil
 }
 
-func (s *mongodb) Find(opts interface{}, data interface{}) error {
-	o := opts.(FindOptions)
+func (s *mongodb) Find(data interface{}, opts options2.FindOptions) error {
 
 	findOpts := &options.FindOptions{}
-	if o.Pagination() != nil {
-		findOpts.SetLimit(o.Pagination().PageSize()).SetSkip(o.Pagination().Offset())
+	if opts.Pagination() != nil {
+		findOpts.SetLimit(opts.Pagination().PageSize()).SetSkip(opts.Pagination().Offset())
 	}
 
-	filter, err := o.Filter()
+	filter, err := opts.Filter()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (s *mongodb) Find(opts interface{}, data interface{}) error {
 	if err != nil {
 		return err
 	}
-	o.Pagination().SetTotal(total)
+	opts.Pagination().SetTotal(total)
 
 	cursor, err := s.coll.Find(context.Background(), filter, findOpts)
 	if err != nil {

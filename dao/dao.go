@@ -1,5 +1,7 @@
 package dao
 
+import "github.com/guzhongzhi/gmicro/dao/options"
+
 type Entity interface {
 	IsNew() bool
 	ID() interface{}
@@ -8,27 +10,9 @@ type Entity interface {
 }
 
 type DAO interface {
-	Insert(entity Entity, opts InsertOptions) (id interface{}, err error)
-	Update(id interface{}, data Entity, opts UpdateOptions) error
-	Find(opts interface{}, data interface{}) error
-	Delete(id interface{}) error
-	Get(id interface{}, data Entity) error
-}
-
-type FindOptions interface {
-	Filter() (interface{}, error)
-	Options() (interface{}, error)
-	Pagination() *Pagination
-}
-
-type InsertOptions interface {
-	Options() interface{}
-}
-
-type UpdateOptions interface {
-	Options() interface{}
-}
-
-type CollectionOptions interface {
-	Options() interface{}
+	Insert(entity Entity, opts options.InsertOptions) (id interface{}, err error)
+	Update(id interface{}, data Entity, opts options.UpdateOptions) error
+	Find(data interface{}, opts options.FindOptions) error
+	Delete(id interface{}, opts options.DeleteOptions) error
+	Get(id interface{}, data Entity, opts options.GetOptions) error
 }

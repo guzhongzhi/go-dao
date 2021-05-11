@@ -2,9 +2,11 @@ package data
 
 import (
 	"github.com/guzhongzhi/gmicro/dao"
+	"github.com/guzhongzhi/gmicro/dao/pagination"
 	"github.com/olivere/elastic/v7"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TemplateBase struct {
@@ -22,7 +24,7 @@ type Template struct {
 
 func NewMTemplateDAO(db *mongo.Database, es *elastic.Client) *templateDAO {
 	return &templateDAO{
-		dao.NewMongodbDAO(db, "e_template", nil),
+		dao.NewMongodbDAO(db, "e_template", options.CollectionOptions{}),
 		dao.NewElasticSearchDAO(es, "e_template"),
 	}
 }
@@ -33,14 +35,14 @@ type templateDAO struct {
 }
 
 func (s *templateDAO) DeleteById(id string) error {
-	return s.e.Delete(id)
+	return s.e.Delete(id, nil)
 }
 
 type FindOptions struct {
 	id         *string
 	tags       []string
 	name       *string
-	pagination *dao.Pagination
+	pagination *pagination.Pagination
 }
 
 func (s *FindOptions) ID(v string) *FindOptions {
@@ -58,7 +60,7 @@ func (s *FindOptions) Name(v string) *FindOptions {
 	return s
 }
 
-func (s *FindOptions) Pagination() *dao.Pagination {
+func (s *FindOptions) Pagination() *pagination.Pagination {
 	return s.pagination
 }
 
@@ -83,6 +85,6 @@ type ElasticSearchFindOptions FindOptions
 
 func NewMongodbFindOptions() *FindOptions {
 	return &FindOptions{
-		pagination: dao.NewPagination(),
+		pagination: pagination.NewPagination(),
 	}
 }

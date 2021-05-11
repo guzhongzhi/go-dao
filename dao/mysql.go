@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	mysql2 "github.com/guzhongzhi/gmicro/dao/mysql"
+	"github.com/guzhongzhi/gmicro/dao/options"
 	"github.com/kisielk/sqlstruct"
 	"reflect"
 	"strings"
@@ -13,19 +15,11 @@ type MysqlDAO interface {
 	DAO
 	DB() *sql.DB
 	Table() string
-	Query(sq string, params []interface{}) (*sql.Rows, error)
-	Exec(sq string, params []interface{}) (sql.Result, error)
+	Query(sq string, params []interface{}, tx *sql.Tx) (*sql.Rows, error)
+	Exec(sq string, params []interface{}, tx *sql.Tx) (sql.Result, error)
 }
 
-type MysqlDAOOptions struct {
-	GetSQL    string
-	FindSQL   string
-	DeleteSQL string
-	UpdateSQL string
-	InsertSQL string
-}
-
-func NewMysqlDAO(db *sql.DB, table string, idFieldName string, opts MysqlDAOOptions) MysqlDAO {
+func NewMysqlDAO(db *sql.DB, table string, idFieldName string, opts mysql2.DAOOptions) MysqlDAO {
 	return &mysql{
 		db:          db,
 		table:       table,
@@ -35,11 +29,10 @@ func NewMysqlDAO(db *sql.DB, table string, idFieldName string, opts MysqlDAOOpti
 }
 
 type mysql struct {
-	tx          *sql.Tx
 	db          *sql.DB
 	table       string
 	idFieldName string
-	opts        MysqlDAOOptions
+	opts        mysql2.DAOOptions
 }
 
 func (s *mysql) Table() string {
@@ -50,13 +43,17 @@ func (s *mysql) DB() *sql.DB {
 	return s.db
 }
 
-func (s *mysql) Insert(entity Entity, opts InsertOptions) (interface{}, error) {
+func (s *mysql) Insert(entity Entity, opts options.InsertOptions) (interface{}, error) {
+	if opts == nil {
+		opts = &mysql2.InsertOptions{}
+	}
+
 	fieldNames, params := s.buildData(entity)
 	sq := "INSERT INTO `%s` (%s) VALUES (%s)"
 	placeHolder := strings.Repeat("? , ", len(fieldNames))
 	sq = fmt.Sprintf(sq, s.table, strings.Join(fieldNames, ", "), placeHolder[:len(placeHolder)-2])
 
-	rs, err := s.Exec(sq, params)
+	rs, err := s.Exec(sq, params, opts.(mysql2.TransOptions).Tx())
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +85,11 @@ func (s *mysql) buildData(data interface{}) ([]string, []interface{}) {
 	return fieldNames, params
 }
 
-func (s *mysql) Update(id interface{}, data Entity, opts UpdateOptions) error {
+func (s *mysql) Update(id interface{}, data Entity, opts options.UpdateOptions) error {
+	if opts != nil {
+		opts = &mysql2.UpdateOptions{}
+	}
+
 	fieldNames, params := s.buildData(data)
 	sq := "UPDATE `%s` SET %s WHERE `%s` = ?"
 	setValue := strings.Join(fieldNames, " = ? ,")
@@ -96,27 +97,32 @@ func (s *mysql) Update(id interface{}, data Entity, opts UpdateOptions) error {
 	sq = fmt.Sprintf(sq, s.table, setValue[:len(setValue)-1], s.idFieldName)
 	params = append(params, id)
 
-	_, err := s.Exec(sq, params)
+	_, err := s.Exec(sq, params, opts.(mysql2.TransOptions).Tx())
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *mysql) Exec(sq string, params []interface{}) (sql.Result, error) {
+func (s *mysql) Exec(sq string, params []interface{}, tx *sql.Tx) (sql.Result, error) {
 	var rs sql.Result
 	var err error
 
-	if s.tx != nil {
-		rs, err = s.tx.Exec(sq, params...)
+	if tx != nil {
+		rs, err = tx.Exec(sq, params...)
 	} else {
 		rs, err = s.db.Exec(sq, params...)
 	}
 	return rs, err
 }
 
-func (s *mysql) Find(opts interface{}, data interface{}) error {
-	filter, err := opts.(FindOptions).Filter()
+func (s *mysql) Find(data interface{}, opts options.FindOptions) error {
+	if opts == nil {
+		opts = &mysql2.FindOptions{}
+	}
+	fmt.Println("opts.(mysql2.TransOptions).Tx()", opts.(mysql2.TransOptions).Tx())
+	filter, err := opts.Filter()
+
 	if err != nil {
 		return err
 	}
@@ -126,7 +132,7 @@ func (s *mysql) Find(opts interface{}, data interface{}) error {
 	}
 
 	sq = fmt.Sprintf(sq, filter)
-	rs, err := s.Query(sq, []interface{}{})
+	rs, err := s.Query(sq, []interface{}{}, opts.(mysql2.TransOptions).Tx())
 	if err != nil {
 		return err
 	}
@@ -168,10 +174,15 @@ func (s *mysql) Find(opts interface{}, data interface{}) error {
 	return nil
 }
 
-func (s *mysql) Delete(id interface{}) error {
+func (s *mysql) Delete(id interface{}, opts options.DeleteOptions) error {
+	if opts == nil {
+		opts = &mysql2.DeleteOptions{}
+	}
+	o := opts.(mysql2.TransOptions)
+
 	sq := "DELETE FROM `%s` WHERE `%s` = ?"
 	sq = fmt.Sprintf(sq, s.table, s.idFieldName)
-	_, err := s.Exec(sq, []interface{}{id})
+	_, err := s.Exec(sq, []interface{}{id}, o.Tx())
 	if err != nil {
 		return err
 	}
@@ -188,7 +199,12 @@ func (s *mysql) newStruct(data interface{}) interface{} {
 	return ins
 }
 
-func (s *mysql) Get(id interface{}, data Entity) error {
+func (s *mysql) Get(id interface{}, data Entity, opts options.GetOptions) error {
+	if opts == nil {
+		opts = &mysql2.GetOptions{}
+	}
+	o := opts.(mysql2.TransOptions)
+
 	sq := ""
 	ins := s.newStruct(data)
 
@@ -200,7 +216,7 @@ func (s *mysql) Get(id interface{}, data Entity) error {
 	}
 
 	params := []interface{}{id}
-	rs, err := s.Query(sq, params)
+	rs, err := s.Query(sq, params, o.Tx())
 	if err != nil {
 		return err
 	}
@@ -211,12 +227,12 @@ func (s *mysql) Get(id interface{}, data Entity) error {
 	return err
 }
 
-func (s *mysql) Query(sq string, params []interface{}) (*sql.Rows, error) {
+func (s *mysql) Query(sq string, params []interface{}, tx *sql.Tx) (*sql.Rows, error) {
 	var rs *sql.Rows
 	var err error
 
-	if s.tx != nil {
-		rs, err = s.tx.Query(sq, params...)
+	if tx != nil {
+		rs, err = tx.Query(sq, params...)
 	} else {
 		rs, err = s.db.Query(sq, params...)
 	}
