@@ -14,23 +14,9 @@ import (
 )
 
 func main() {
-	app := console.NewApp("salad-effect", "1.0")
-	cfgPath := path.Dir(path.Dir(os.Args[0])) + "/configs/"
-	app.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:    "env",
-			EnvVars: []string{"env"},
-			Value:   "dev",
-			Usage:   "specify runtime environment: dev, qa, prod",
-		},
-		&cli.StringFlag{
-			Name:    "config",
-			EnvVars: []string{"config"},
-			Value:   cfgPath,
-			Usage:   "config file directory",
-		},
-	}
 
+	basePath := path.Dir(path.Dir(os.Args[0]))
+	app := console.NewApp("salad-effect", "1.0", basePath)
 	app.Action = func(ctx *cli.Context) error {
 		env := ctx.String("env")
 		cfgPath := ctx.String("config")
