@@ -15,7 +15,7 @@ import (
 
 func TestTemplate(t *testing.T) {
 
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", "root", "", "tcp", "118.31.246.195", 3306, "bmall")
+	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", "root", "AyXwZhBf0nGlKxJf", "tcp", "127.0.0.1", 3306, "bmall")
 	DB, err := sql.Open("mysql", dsn)
 
 	if err != nil {
