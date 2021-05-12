@@ -2,7 +2,6 @@ package data
 
 import (
 	"github.com/guzhongzhi/gmicro/dao"
-	"github.com/guzhongzhi/gmicro/dao/pagination"
 	"github.com/olivere/elastic/v7"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -39,10 +38,11 @@ func (s *templateDAO) DeleteById(id string) error {
 }
 
 type FindOptions struct {
+	dao.NoopTransactionOptions
 	id         *string
 	tags       []string
 	name       *string
-	pagination *pagination.Pagination
+	pagination *dao.Pagination
 }
 
 func (s *FindOptions) ID(v string) *FindOptions {
@@ -60,7 +60,7 @@ func (s *FindOptions) Name(v string) *FindOptions {
 	return s
 }
 
-func (s *FindOptions) Pagination() *pagination.Pagination {
+func (s *FindOptions) Pagination() *dao.Pagination {
 	return s.pagination
 }
 
@@ -85,6 +85,6 @@ type ElasticSearchFindOptions FindOptions
 
 func NewMongodbFindOptions() *FindOptions {
 	return &FindOptions{
-		pagination: pagination.NewPagination(),
+		pagination: dao.NewPagination(),
 	}
 }

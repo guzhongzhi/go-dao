@@ -4,14 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/guzhongzhi/gmicro/dao"
-	"github.com/guzhongzhi/gmicro/dao/mysql"
-	"github.com/guzhongzhi/gmicro/dao/pagination"
 )
 
 type TOrderFindOptions struct {
+	dao.NoopTransactionOptions
 	OID *string
 	ID  *int
-	mysql.TransOptionsDefault
 }
 
 func (s *TOrderFindOptions) Filter() (interface{}, error) {
@@ -22,8 +20,8 @@ func (s *TOrderFindOptions) Options() (interface{}, error) {
 	panic("implement me")
 }
 
-func (s *TOrderFindOptions) Pagination() *pagination.Pagination {
-	return pagination.NewPagination()
+func (s *TOrderFindOptions) Pagination() *dao.Pagination {
+	return dao.NewPagination()
 }
 
 type TOrder struct {
@@ -56,7 +54,7 @@ type TOrderDAO interface {
 
 func NewTOrderDAO(db *sql.DB) TOrderDAO {
 	return &tOrderDAO{
-		dao.NewMysqlDAO(db, "t_order", "id", mysql.DAOOptions{
+		dao.NewMysqlDAO(db, "t_order", "id", dao.SQLDAOOptions{
 			FindSQL: "SELECT o.id AS id,o.oid,o.trade_no FROM t_order AS  o " +
 				"LEFT JOIN t_iap_order AS t ON t.t_order_id = o.id " +
 				"WHERE 1=1 LIMIT 1 %s",
