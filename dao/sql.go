@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type MysqlDAO interface {
+type SQLDAO interface {
 	DAO
 	DB() *sql.DB
 	Table() string
@@ -17,7 +17,7 @@ type MysqlDAO interface {
 	Exec(sq string, params []interface{}, tx TransactionOptions) (sql.Result, error)
 }
 
-func NewMysqlDAO(db *sql.DB, table string, idFieldName string, opts SQLDAOOptions) MysqlDAO {
+func NewSQLDAO(db *sql.DB, table string, idFieldName string, opts SQLDAOOptions) SQLDAO {
 	return &mysql{
 		db:          db,
 		table:       table,

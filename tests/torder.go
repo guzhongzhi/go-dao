@@ -49,12 +49,12 @@ func (s *TOrder) String() string {
 }
 
 type TOrderDAO interface {
-	dao.MysqlDAO
+	dao.SQLDAO
 }
 
 func NewTOrderDAO(db *sql.DB) TOrderDAO {
 	return &tOrderDAO{
-		dao.NewMysqlDAO(db, "t_order", "id", dao.SQLDAOOptions{
+		dao.NewSQLDAO(db, "t_order", "id", dao.SQLDAOOptions{
 			FindSQL: "SELECT o.id AS id,o.oid,o.trade_no FROM t_order AS  o " +
 				"LEFT JOIN t_iap_order AS t ON t.t_order_id = o.id " +
 				"WHERE 1=1 LIMIT 1 %s",
@@ -63,5 +63,5 @@ func NewTOrderDAO(db *sql.DB) TOrderDAO {
 }
 
 type tOrderDAO struct {
-	dao.MysqlDAO
+	dao.SQLDAO
 }
