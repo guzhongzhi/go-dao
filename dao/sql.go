@@ -1,9 +1,11 @@
 package dao
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/kisielk/sqlstruct"
 	"reflect"
 	"strings"
@@ -18,6 +20,9 @@ type SQLDAO interface {
 }
 
 func NewSQLDAO(db *sql.DB, table string, idFieldName string, opts SQLDAOOptions) SQLDAO {
+	if opts.Logger == nil {
+		opts.Logger = logger.Default()
+	}
 	return &mysql{
 		db:          db,
 		table:       table,
@@ -35,6 +40,21 @@ type mysql struct {
 
 func (s *mysql) Table() string {
 	return s.table
+}
+
+func (s *mysql) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error) {
+	var txOptions *sql.TxOptions
+	if tx != nil {
+		_, ok := tx.(*sql.TxOptions)
+		if !ok {
+			return nil, fmt.Errorf("invalid tx options for SQLDAO, must be *sql.TxOptions")
+		}
+		txOptions = tx.(*sql.TxOptions)
+	} else {
+		txOptions = &sql.TxOptions{}
+	}
+	
+	return s.DB().BeginTx(context.Background(), txOptions)
 }
 
 func (s *mysql) DB() *sql.DB {
@@ -208,7 +228,9 @@ func (s *mysql) Query(sq string, params []interface{}, tx TransactionOptions) (*
 	var rs *sql.Rows
 	var err error
 
+	s.opts.Logger.Debug("tx", tx.Tx())
 	if tx != nil && tx.Tx() != nil {
+		s.opts.Logger.Debug("query with context", tx.Tx())
 		rs, err = tx.Tx().(*sql.Tx).Query(sq, params...)
 	} else {
 		rs, err = s.db.Query(sq, params...)

@@ -1,5 +1,7 @@
 package dao
 
+import "context"
+
 type Entity interface {
 	IsNew() bool
 	ID() interface{}
@@ -13,4 +15,5 @@ type DAO interface {
 	Find(data interface{}, opts FindOptions) error
 	Delete(id interface{}, opts DeleteOptions) error
 	Get(id interface{}, data Entity, opts GetOptions) error
+	BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error)
 }

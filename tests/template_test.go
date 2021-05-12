@@ -23,6 +23,10 @@ func TestTemplate(t *testing.T) {
 	}
 	o := &TOrder{}
 	torder := NewTOrderDAO(DB)
+
+	tx, err := torder.BeginTransaction(context.Background(), nil)
+	//sqlTx := tx.(*sql.Tx)
+
 	/*
 	err00 := torder.Get(1239, o)
 
@@ -31,8 +35,9 @@ func TestTemplate(t *testing.T) {
 	}
 	*/
 	findOpts1 := &TOrderFindOptions{}
-
+	findOpts1.SetTx(tx)
 	torders := make([]TOrder, 0)
+	fmt.Println("findOpts: ", tx, err)
 	err00 := torder.Find(&torders, findOpts1)
 
 	fmt.Println("torderstorderstorderstorderstorders len: ", len(torders), fmt.Sprintf("%#v", torders))

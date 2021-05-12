@@ -1,18 +1,22 @@
 package dao
 
+type TxOptions interface {
+}
+
 type GetOptions interface {
 	Options() (interface{}, error)
 }
 
 type NoopTransactionOptions struct {
+	tx interface{}
 }
 
 func (s *NoopTransactionOptions) SetTx(v interface{}) {
-
+	s.tx = v
 }
 
 func (s *NoopTransactionOptions) Tx() interface{} {
-	return nil
+	return s.tx
 }
 
 type TransactionOptions interface {

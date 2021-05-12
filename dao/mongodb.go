@@ -19,6 +19,10 @@ func NewMongodbDAO(db *mongo.Database, tableName string, opts options.Collection
 	}
 }
 
+func (s *mongodb) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error) {
+	return nil, fmt.Errorf("mongodb do not support transaction")
+}
+
 type mongodb struct {
 	coll *mongo.Collection
 }

@@ -28,6 +28,10 @@ type elasticsearch struct {
 	index  string
 }
 
+func (s *elasticsearch) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error) {
+	return nil, fmt.Errorf("elasticsearch do not support transaction")
+}
+
 func (s *elasticsearch) IndexName() string {
 	return s.index
 }
