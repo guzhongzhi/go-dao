@@ -16,9 +16,9 @@ const (
 	EnvProd = "prod"
 )
 
-func LoadConfigByFiles(path, env string, bootstrap interface{}, logger logger.SuperLogger) (error) {
+func LoadConfigByFiles(path, env string, bootstrap interface{}, logger logger.SuperLogger, envPrefix string) (error) {
 
-	err := readConfigFiles(env, path, bootstrap, logger)
+	err := readConfigFiles(env, path, bootstrap, logger, envPrefix)
 	return err
 }
 
@@ -58,10 +58,11 @@ func generateCfgKeys(t reflect.Type, parentPath string) map[string]reflect.Type 
 	return names
 }
 
-func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger) error {
+func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger, envPrefix string) error {
 	if env != EnvDev && env != EnvQA && env != EnvProd {
 		return errors.New("invalid env param")
 	}
+	viper.SetEnvPrefix(envPrefix)
 	viper.AutomaticEnv()
 	viper.SetConfigFile(dir + "/config.prod.yaml")
 	if err := viper.ReadInConfig(); err != nil {

@@ -17,18 +17,17 @@ import (
 )
 
 func main() {
-	os.Setenv("SERVER.GRPC.DISABLED", "true")
-	os.Setenv("SERVER.GRPC.ADDR", "0.0.0.0:4444")
-	os.Setenv("SERVER.HTTP.ADDR", "0.0.0.0:4445")
-
+	os.Setenv("SALAD_SERVER.GRPC.DISABLED", "true")
+	os.Setenv("SALAD_SERVER.HTTP.DISABLED", "true")
 	basePath := path.Dir(path.Dir(os.Args[0]))
-	app := console.NewApp("salad-effect", "1.0", basePath)
+	envPrefix := "SALAD"
+	app := console.NewApp("salad-effect", "1.0", basePath, envPrefix)
 	app.Action = func(ctx *cli.Context) error {
 		env := ctx.String("env")
 		cfgPath := ctx.String("config")
 
-		cfg := &infrastructure.Bootstrap{}
-		err := config.LoadConfigByFiles(cfgPath, env, cfg, logger.Default())
+		cfg := infrastructure.NewBootstrap()
+		err := config.LoadConfigByFiles(cfgPath, env, cfg, logger.Default(), envPrefix)
 		if err != nil {
 			panic(err)
 			os.Exit(1)
