@@ -10,6 +10,7 @@ import (
 	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"net/http"
 	"os"
 	"path"
@@ -32,6 +33,8 @@ func main() {
 
 		serverConfig := server.NewConfig(server.GRPCAddrOption(cfg.ServerConfig().GRPC.Addr),
 			server.GRPCServerOption(grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+				md, _ := metadata.FromIncomingContext(ctx)
+				fmt.Println("md: ", md)
 				return handler(ctx, req)
 			})),
 			server.HTTPPluginsOption(cfg.ServerConfig().HTTP.Plugins),

@@ -21,6 +21,15 @@ type Registry interface {
 	Register(mux *runtime.ServeMux, server *grpc.Server)
 }
 
+func NewServer(config *Config, register Registry, logger logger.SuperLogger) *Server {
+	return &Server{
+		config:   config,
+		register: register,
+		logger:   logger,
+		sysSig:   make(chan os.Signal, 1),
+	}
+}
+
 type Server struct {
 	config     *Config
 	register   Registry
@@ -32,8 +41,12 @@ type Server struct {
 
 func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Infof("start to stop servers")
-	s.grpcServer.Stop()
-	s.httpServer.Close()
+	if s.grpcServer != nil {
+		s.grpcServer.Stop()
+	}
+	if s.httpServer != nil {
+		s.httpServer.Close()
+	}
 	return nil
 }
 
@@ -55,16 +68,7 @@ func (s *Server) syscall() error {
 	return nil
 }
 
-func (s *Server) Serve() error {
-	grpcListener, err := net.Listen("tcp", s.config.GRPC.Addr)
-	if err != nil {
-		panic(err)
-	}
-	s.grpcServer = grpc.NewServer(s.config.GRPC.Options...)
-
-	mux := runtime.NewServeMux()
-	s.register.Register(mux, s.grpcServer)
-
+func (s *Server) serveHTTP(mux *runtime.ServeMux) {
 	var httpHandler = http.Handler(mux)
 	for _, name := range s.config.HTTP.Plugins {
 		if fn, ok := middleware.Middlewares[name]; ok {
@@ -81,32 +85,50 @@ func (s *Server) Serve() error {
 		Handler: httpHandler,
 	}
 
-	go func() {
-		ip, port := parseAddr(grpcListener.Addr().String())
-		s.config.GRPC.Addr = fmt.Sprintf("%s:%s", ip, port)
-		s.logger.Infof("grpc listen: %s", s.config.GRPC.Addr)
+	httpListener, err := net.Listen("tcp", s.config.HTTP.Addr)
+	if err != nil {
+		panic(err)
+	}
+	ip, port := parseAddr(httpListener.Addr().String())
+	s.config.HTTP.Addr = fmt.Sprintf("%s:%s", ip, port)
+	s.logger.Infof("http listen: %s", s.config.HTTP.Addr)
 
-		err := s.grpcServer.Serve(grpcListener)
-		if err != nil {
-			s.logger.Infof("grpc error: %s", err.Error())
-		}
-		s.logger.Infof("grpc server stopped")
+	err = s.httpServer.Serve(httpListener)
+	if err != nil {
+		s.logger.Info(err.Error())
+	}
+}
 
-	}()
-	go func() {
-		httpListener, err := net.Listen("tcp", s.config.HTTP.Addr)
-		if err != nil {
-			panic(err)
-		}
-		ip, port := parseAddr(httpListener.Addr().String())
-		s.config.HTTP.Addr = fmt.Sprintf("%s:%s", ip, port)
-		s.logger.Infof("http listen: %s", s.config.HTTP.Addr)
+func (s *Server) serveGRPC(grpcServer *grpc.Server) {
+	if s.config.GRPC.Disabled {
+		s.logger.Info("grpc is disabled")
+		return
+	}
 
-		err = s.httpServer.Serve(httpListener)
-		if err != nil {
-			s.logger.Info(err.Error())
-		}
-	}()
+	fmt.Println("s.config.GRPC.Disabled", s.config.GRPC.Disabled)
+
+	grpcListener, err := net.Listen("tcp", s.config.GRPC.Addr)
+	if err != nil {
+		panic(err)
+	}
+	ip, port := parseAddr(grpcListener.Addr().String())
+	s.config.GRPC.Addr = fmt.Sprintf("%s:%s", ip, port)
+	s.logger.Infof("grpc listen: %s", s.config.GRPC.Addr)
+	s.grpcServer = grpcServer
+	err = grpcServer.Serve(grpcListener)
+	if err != nil {
+		s.logger.Infof("grpc error: %s", err.Error())
+	}
+	s.logger.Infof("grpc server stopped")
+}
+
+func (s *Server) Serve() error {
+	grpcServer := grpc.NewServer(s.config.GRPC.Options...)
+	mux := runtime.NewServeMux()
+	s.register.Register(mux, grpcServer)
+
+	go s.serveGRPC(grpcServer)
+	go s.serveHTTP(mux)
 
 	return s.syscall()
 }
@@ -147,13 +169,4 @@ func localIP() []string {
 		}
 	}
 	return ips
-}
-
-func NewServer(config *Config, register Registry, logger logger.SuperLogger) *Server {
-	return &Server{
-		config:   config,
-		register: register,
-		logger:   logger,
-		sysSig:   make(chan os.Signal, 1),
-	}
 }

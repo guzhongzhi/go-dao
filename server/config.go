@@ -8,14 +8,16 @@ import (
 type Option func(opts *Config)
 
 type httpConfig struct {
+	Disabled bool
 	Addr     string
 	Plugins  []string
 	Handlers []middleware.Middleware
 }
 
 type grpcConfig struct {
-	Addr    string
-	Options []grpc.ServerOption
+	Disabled bool
+	Addr     string
+	Options  []grpc.ServerOption
 }
 
 type Config struct {
@@ -26,15 +28,28 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		GRPC: &grpcConfig{
-			Addr:    "0.0.0.0:9000",
-			Options: make([]grpc.ServerOption, 0),
+			Disabled: false,
+			Addr:     "0.0.0.0:9000",
+			Options:  make([]grpc.ServerOption, 0),
 		},
 		HTTP: &httpConfig{
+			Disabled: false,
 			Addr:     "0.0.0.0:8000",
 			Handlers: make([]middleware.Middleware, 0),
 			Plugins:  make([]string, 0),
 		},
 	}
+}
+
+func (s *Config) ApplyOptions(opts ...Option) {
+	for _, opt := range opts {
+		opt(s)
+	}
+}
+
+func ApplyOptions(cfg *Config, opts ...Option) *Config {
+	cfg.ApplyOptions(opts...)
+	return cfg
 }
 
 func NewConfig(opts ...Option) *Config {

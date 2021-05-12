@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/guzhongzhi/gmicro/logger"
-	"os"
 	"reflect"
 	"strings"
 
@@ -63,7 +62,7 @@ func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger
 	if env != EnvDev && env != EnvQA && env != EnvProd {
 		return errors.New("invalid env param")
 	}
-
+	viper.AutomaticEnv()
 	viper.SetConfigFile(dir + "/config.prod.yaml")
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("load config by viper failed, err=%w", err)
@@ -82,19 +81,11 @@ func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger
 	t := reflect.TypeOf(out)
 	keys := generateCfgKeys(t, "")
 
-	for key, t := range keys {
-		envName := strings.Replace(strings.ToUpper(key), "/", "_", -1)
-		logger.Debug(envName, " ", t.Kind(), " ", t.Name())
-		if os.Getenv(envName) == "" {
-			continue
-		}
-		switch viper.Get(key).(type) {
-		case []string:
-			viper.Set(key, []string{os.Getenv(envName)})
-		case string:
-			viper.Set(key, os.Getenv(envName))
-		default:
-			panic(fmt.Errorf("unsupport ENV data type '%v' for the field of '%s'", t.Kind(), envName))
+	allSettings := viper.AllSettings()
+	for key, _ := range keys {
+		viperKey := strings.Replace(strings.ToLower(key), "/", ".", -1)
+		if _, ok := allSettings[viperKey]; !ok {
+			viper.Set(viperKey, viper.Get(viperKey))
 		}
 	}
 	return viper.Unmarshal(out)

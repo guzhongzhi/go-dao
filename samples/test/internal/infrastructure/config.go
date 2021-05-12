@@ -10,8 +10,5 @@ type Bootstrap struct {
 }
 
 func (s *Bootstrap) ServerConfig() *server.Config {
-	if s.Server == nil {
-		return server.DefaultConfig()
-	}
 	return s.Server
 }
