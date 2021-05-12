@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/guzhongzhi/gmicro/dao/options"
 	"github.com/olivere/elastic/v7"
 	"reflect"
 )
@@ -44,7 +43,7 @@ func (s *elasticsearch) init() {
 	}
 }
 
-func (s *elasticsearch) Insert(entity Entity, opts options.InsertOptions) (id interface{}, err error) {
+func (s *elasticsearch) Insert(entity Entity, opts InsertOptions) (id interface{}, err error) {
 	js, err := json.Marshal(entity)
 	if err != nil {
 		return nil, err
@@ -57,7 +56,7 @@ func (s *elasticsearch) Insert(entity Entity, opts options.InsertOptions) (id in
 	return rsp.Id, nil
 }
 
-func (s *elasticsearch) Update(id interface{}, data Entity, opts options.UpdateOptions) error {
+func (s *elasticsearch) Update(id interface{}, data Entity, opts UpdateOptions) error {
 	_, err := s.client.Update().
 		Index(s.index).
 		Id(fmt.Sprintf("%s", id)).
@@ -67,7 +66,7 @@ func (s *elasticsearch) Update(id interface{}, data Entity, opts options.UpdateO
 	return err
 }
 
-func (s *elasticsearch) Find(data interface{}, opts options.FindOptions) error {
+func (s *elasticsearch) Find(data interface{}, opts FindOptions) error {
 	rv := reflect.ValueOf(data)
 	if rv.Type().Kind() != reflect.Ptr {
 		return fmt.Errorf("elasticsearch find data should be pointer of struct or map for the index of '%s'", s.index)
@@ -77,7 +76,7 @@ func (s *elasticsearch) Find(data interface{}, opts options.FindOptions) error {
 		return fmt.Errorf("elasticsearch find data can not be set for index of '%s'", s.index)
 	}
 
-	o := opts.(options.FindOptions)
+	o := opts.(FindOptions)
 	filter, err := o.Filter()
 	if err != nil {
 		return err
@@ -120,7 +119,7 @@ func (s *elasticsearch) Find(data interface{}, opts options.FindOptions) error {
 	return nil
 }
 
-func (s *elasticsearch) Delete(id interface{}, opts options.DeleteOptions) error {
+func (s *elasticsearch) Delete(id interface{}, opts DeleteOptions) error {
 	_, err := s.client.Delete().
 		Index(s.index).
 		Id(fmt.Sprintf("%s", id)).
@@ -132,7 +131,7 @@ func (s *elasticsearch) Delete(id interface{}, opts options.DeleteOptions) error
 	return nil
 }
 
-func (s *elasticsearch) Get(id interface{}, data Entity, opts options.GetOptions) error {
+func (s *elasticsearch) Get(id interface{}, data Entity, opts GetOptions) error {
 	rs, err := s.client.Get().
 		Index(s.index).
 		Id(fmt.Sprintf("%s", id)).

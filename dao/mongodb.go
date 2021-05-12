@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"fmt"
-	options2 "github.com/guzhongzhi/gmicro/dao/options"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -28,7 +27,7 @@ func (s *mongodb) Collection() *mongo.Collection {
 	return s.coll
 }
 
-func (s *mongodb) Delete(id interface{}, opts options2.DeleteOptions) error {
+func (s *mongodb) Delete(id interface{}, opts DeleteOptions) error {
 	_, err := s.coll.DeleteOne(context.Background(), primitive.M{"_id": id})
 	if err != nil {
 		return err
@@ -36,12 +35,12 @@ func (s *mongodb) Delete(id interface{}, opts options2.DeleteOptions) error {
 	return nil
 }
 
-func (s *mongodb) Get(id interface{}, data Entity, opts options2.GetOptions) error {
+func (s *mongodb) Get(id interface{}, data Entity, opts GetOptions) error {
 	rs := s.coll.FindOne(context.Background(), primitive.M{"_id": id})
 	return rs.Decode(data)
 }
 
-func (s *mongodb) Insert(entity Entity, opts options2.InsertOptions) (id interface{}, err error) {
+func (s *mongodb) Insert(entity Entity, opts InsertOptions) (id interface{}, err error) {
 	if !entity.IsNew() {
 		return nil, fmt.Errorf("collection '%s' insert error, the data is not a new record", s.coll.Name())
 	}
@@ -54,7 +53,7 @@ func (s *mongodb) Insert(entity Entity, opts options2.InsertOptions) (id interfa
 	return rs.InsertedID, err
 }
 
-func (s *mongodb) Update(id interface{}, data Entity, updateOptions options2.UpdateOptions) error {
+func (s *mongodb) Update(id interface{}, data Entity, updateOptions UpdateOptions) error {
 	_, err := s.coll.UpdateOne(context.Background(), primitive.M{
 		"_id": id,
 	}, primitive.M{"$set": data})
@@ -64,7 +63,7 @@ func (s *mongodb) Update(id interface{}, data Entity, updateOptions options2.Upd
 	return nil
 }
 
-func (s *mongodb) Find(data interface{}, opts options2.FindOptions) error {
+func (s *mongodb) Find(data interface{}, opts FindOptions) error {
 
 	findOpts := &options.FindOptions{}
 	if opts.Pagination() != nil {
