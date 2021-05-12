@@ -72,6 +72,10 @@ func (s *Server) Serve() error {
 		}
 	}
 
+	for _, fn := range s.config.HTTP.Handlers {
+		httpHandler = fn(httpHandler, s.logger)
+	}
+
 	s.httpServer = &http.Server{
 		Addr:    s.config.HTTP.Addr,
 		Handler: httpHandler,

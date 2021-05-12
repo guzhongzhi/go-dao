@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/guzhongzhi/gmicro/config"
 	"github.com/guzhongzhi/gmicro/console"
 	"github.com/guzhongzhi/gmicro/logger"
@@ -9,6 +10,7 @@ import (
 	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
+	"net/http"
 	"os"
 	"path"
 )
@@ -33,7 +35,14 @@ func main() {
 				return handler(ctx, req)
 			})),
 			server.HTTPPluginsOption(cfg.ServerConfig().HTTP.Plugins),
-			server.HTTPAddrOption(cfg.ServerConfig().HTTP.Addr))
+			server.HTTPAddrOption(cfg.ServerConfig().HTTP.Addr),
+			server.HTTPHandlerOption(func(h http.Handler, logger logger.SuperLogger) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					fmt.Println("wrapper in main")
+					h.ServeHTTP(w, r)
+				})
+			}),
+		)
 
 		server, _, err := initApp(cfg, logger.Default(), serverConfig)
 		if err != nil {

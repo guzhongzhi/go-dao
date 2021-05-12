@@ -1,8 +1,8 @@
 package server
 
 import (
+	"github.com/guzhongzhi/gmicro/server/middleware"
 	"google.golang.org/grpc"
-	"net/http"
 )
 
 type Option func(opts *Config)
@@ -10,7 +10,7 @@ type Option func(opts *Config)
 type httpConfig struct {
 	Addr     string
 	Plugins  []string
-	Handlers []http.Handler
+	Handlers []middleware.Middleware
 }
 
 type grpcConfig struct {
@@ -31,7 +31,7 @@ func DefaultConfig() *Config {
 		},
 		HTTP: &httpConfig{
 			Addr:     "0.0.0.0:8000",
-			Handlers: make([]http.Handler, 0),
+			Handlers: make([]middleware.Middleware, 0),
 			Plugins:  make([]string, 0),
 		},
 	}
@@ -66,5 +66,11 @@ func HTTPAddrOption(v string) Option {
 func HTTPPluginsOption(v []string) Option {
 	return func(opts *Config) {
 		opts.HTTP.Plugins = v
+	}
+}
+
+func HTTPHandlerOption(v middleware.Middleware) Option {
+	return func(opts *Config) {
+		opts.HTTP.Handlers = append(opts.HTTP.Handlers, v)
 	}
 }
