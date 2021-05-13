@@ -8,7 +8,7 @@ package main
 import (
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/internal/application"
+	"github.com/guzhongzhi/gmicro/test/internal/backend"
 	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
 )
 
@@ -17,8 +17,7 @@ import (
 //initApp init kratos application.
 //go:generate kratos t wire
 func initApp(cfg *infrastructure.Bootstrap, l logger.SuperLogger, serverOptions *server.Config) (*server.Server, func(), error) {
-	subEffectServiceServer := application.NewSubEffectServer()
-	registry := application.NewRegister(subEffectServiceServer)
+	registry := backend.NewRegister()
 	serverServer := server.NewServer(serverOptions, registry, l)
 	return serverServer, func() {
 	}, nil

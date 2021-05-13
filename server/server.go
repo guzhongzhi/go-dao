@@ -75,6 +75,10 @@ func (s *Server) syscall() error {
 }
 
 func (s *Server) serveHTTP(mux *runtime.ServeMux) {
+	if s.config.HTTP.Disabled {
+		s.logger.Info("http is disabled")
+		return
+	}
 	var httpHandler = http.Handler(mux)
 	for _, name := range s.config.HTTP.Plugins {
 		if fn, ok := middleware.Middlewares[name]; ok {

@@ -7,7 +7,7 @@ import (
 	"github.com/google/wire"
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/internal/application"
+	"github.com/guzhongzhi/gmicro/test/internal/backend"
 	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
 )
 
@@ -20,6 +20,6 @@ func initApp(
 ) (*server.Server, func(), error) {
 	panic(wire.Build(
 		server.NewServer,
-		application.ProviderSet,
+		backend.ProviderSet,
 	))
 }

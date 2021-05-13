@@ -18,7 +18,7 @@ import (
 
 func main() {
 	os.Setenv("SALAD_SERVER.GRPC.DISABLED", "true")
-	os.Setenv("SALAD_SERVER.HTTP.DISABLED", "true")
+	os.Setenv("SALAD_SERVER.HTTP.ADDR", "0.0.0.0:8009")
 	basePath := path.Dir(path.Dir(os.Args[0]))
 	envPrefix := "SALAD"
 	app := console.NewApp("salad-effect", "1.0", basePath, envPrefix)
@@ -43,7 +43,7 @@ func main() {
 			server.HTTPAddrOption(cfg.ServerConfig().HTTP.Addr),
 			server.HTTPHandlerOption(func(h http.Handler, logger logger.SuperLogger) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					fmt.Println("wrapper in main")
+					fmt.Println("wrapper backend in main")
 					h.ServeHTTP(w, r)
 				})
 			}),
