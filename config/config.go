@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/guzhongzhi/gmicro/logger"
+	"os"
 	"reflect"
 	"strings"
 
@@ -16,8 +17,15 @@ const (
 	EnvProd = "prod"
 )
 
-func LoadConfigByFiles(path, env string, bootstrap interface{}, logger logger.SuperLogger, envPrefix string) (error) {
+// decoders that used while Unmarshal viper settings to config object
+var decoders []viper.DecoderConfigOption
 
+//register decoder
+func RegisterDecoder(option viper.DecoderConfigOption) {
+	decoders = append(decoders, option)
+}
+
+func LoadConfigFiles(path, env string, bootstrap interface{}, logger logger.SuperLogger, envPrefix string) (error) {
 	err := readConfigFiles(env, path, bootstrap, logger, envPrefix)
 	return err
 }
@@ -64,20 +72,18 @@ func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger
 	}
 	viper.SetEnvPrefix(envPrefix)
 	viper.AutomaticEnv()
-	viper.SetConfigFile(dir + "/config.prod.yaml")
+	viper.SetConfigFile(dir + "/config.yaml")
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("load config by viper failed, err=%w", err)
 	}
 
-	if env != EnvProd {
-		envViper := viper.New()
-		envViper.AddConfigPath(dir)
-		envViper.SetConfigName("config." + env)
-		if err := envViper.ReadInConfig(); err != nil {
-			return fmt.Errorf("load config by viper failed, err=%w", err)
-		}
-		viper.MergeConfigMap(envViper.AllSettings())
+	envFile := fmt.Sprintf("%s/config.%s.yaml", dir, env)
+	f, err := os.Open(envFile)
+	if err != nil {
+		logger.Warnf("no env config file: '%s'", envFile)
 	}
+	defer f.Close()
+	viper.MergeConfig(f)
 
 	t := reflect.TypeOf(out)
 	keys := generateCfgKeys(t, "")
@@ -89,5 +95,5 @@ func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger
 			viper.Set(viperKey, viper.Get(viperKey))
 		}
 	}
-	return viper.Unmarshal(out)
+	return viper.Unmarshal(out, decoders...)
 }
