@@ -13,18 +13,17 @@ import (
 	"google.golang.org/grpc/metadata"
 	"net/http"
 	"os"
-	"path"
 )
 
 func main() {
+	cfg := infrastructure.NewBootstrap()
+	consoleCfg := console.NewConfig("salad-effect", "1.0", "", cfg)
+	app := console.New(consoleCfg)
 
-	basePath := path.Dir(path.Dir(os.Args[0]))
-	app := console.NewApp("salad-effect", "1.0", basePath, "")
-	app.Action = func(ctx *cli.Context) error {
+	app.App().Action = func(ctx *cli.Context) error {
 		env := ctx.String("env")
 		cfgPath := ctx.String("config")
 
-		cfg := &infrastructure.Bootstrap{}
 		err := config.LoadConfigFiles(cfgPath, env, cfg, logger.Default(), "")
 		if err != nil {
 			panic(err)
@@ -54,7 +53,7 @@ func main() {
 		return server.Serve()
 	}
 
-	err := app.Run(os.Args)
+	err := app.App().Run(os.Args)
 	if err != nil {
 		panic(err)
 	}

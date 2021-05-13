@@ -13,20 +13,21 @@ import (
 	"google.golang.org/grpc/metadata"
 	"net/http"
 	"os"
-	"path"
 )
 
 func main() {
 	os.Setenv("SALAD_SERVER.GRPC.DISABLED", "true")
 	os.Setenv("SALAD_SERVER.HTTP.ADDR", "0.0.0.0:8009")
-	basePath := path.Dir(path.Dir(os.Args[0]))
 	envPrefix := "SALAD"
-	app := console.NewApp("salad-effect", "1.0", basePath, envPrefix)
-	app.Action = func(ctx *cli.Context) error {
+	cfg := infrastructure.NewBootstrap()
+
+	consoleCfg := console.NewConfig("salad-effect", "1.0", "", cfg)
+	consoleCfg.EnvPrefix = envPrefix
+	app := console.New(consoleCfg)
+	app.App().Action = func(ctx *cli.Context) error {
 		env := ctx.String("env")
 		cfgPath := ctx.String("config")
 
-		cfg := infrastructure.NewBootstrap()
 		err := config.LoadConfigFiles(cfgPath, env, cfg, logger.Default(), envPrefix)
 		if err != nil {
 			panic(err)
@@ -56,7 +57,7 @@ func main() {
 		return server.Serve()
 	}
 
-	err := app.Run(os.Args)
+	err := app.App().Run(os.Args)
 	if err != nil {
 		panic(err)
 	}
