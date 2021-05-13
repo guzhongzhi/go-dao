@@ -20,7 +20,6 @@ func main() {
 	basePath := path.Dir(path.Dir(os.Args[0]))
 	app := console.NewApp("salad-effect", "1.0", basePath, "")
 	app.Action = func(ctx *cli.Context) error {
-		git sta
 		env := ctx.String("env")
 		cfgPath := ctx.String("config")
 
