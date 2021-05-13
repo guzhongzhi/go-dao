@@ -81,9 +81,10 @@ func readConfigFiles(env, dir string, out interface{}, logger logger.SuperLogger
 	f, err := os.Open(envFile)
 	if err != nil {
 		logger.Warnf("no env config file: '%s'", envFile)
+	} else {
+		defer f.Close()
+		viper.MergeConfig(f)
 	}
-	defer f.Close()
-	viper.MergeConfig(f)
 
 	t := reflect.TypeOf(out)
 	keys := generateCfgKeys(t, "")
