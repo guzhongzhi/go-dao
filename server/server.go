@@ -21,6 +21,12 @@ type Registry interface {
 	Register(mux *runtime.ServeMux, server *grpc.Server)
 }
 
+type RegistryFunc func(mux *runtime.ServeMux, server *grpc.Server)
+
+func (s RegistryFunc) Register(mux *runtime.ServeMux, server *grpc.Server) {
+	s(mux, server)
+}
+
 func NewServer(config *Config, register Registry, logger logger.SuperLogger) *Server {
 	return &Server{
 		config:   config,
