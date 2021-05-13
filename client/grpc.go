@@ -7,16 +7,27 @@ import (
 	"google.golang.org/grpc"
 )
 
+type GRPCConfig struct {
+	Addr        string
+	ServiceName string
+	Port        int
+}
+
 type GRCPClient interface {
 	Callback(call func(conn *grpc.ClientConn, logger logger.SuperLogger) error) error
 	Call(ctx context.Context, method string, in interface{}, out interface{}, opts ...grpc.CallOption) error
 }
 
-func NewGRPCClient(serviceName string, port int, l logger.SuperLogger) (*grpcClient, error) {
+func NewGRPCClientWithConfig(config *GRPCConfig, l logger.SuperLogger) (*grpcClient, error) {
+	return NewGRPCClient(config.ServiceName, config.Addr, config.Port, l)
+}
+
+func NewGRPCClient(serviceName string, addr string, port int, l logger.SuperLogger) (*grpcClient, error) {
 	if l == nil {
 		l = logger.Default()
 	}
 	c := &grpcClient{
+		addr:        addr,
 		serviceName: serviceName,
 		port:        port,
 		logger:      l,
@@ -25,13 +36,17 @@ func NewGRPCClient(serviceName string, port int, l logger.SuperLogger) (*grpcCli
 }
 
 type grpcClient struct {
+	addr        string
 	serviceName string
 	port        int
 	logger      logger.SuperLogger
 }
 
 func (s *grpcClient) connect() (*grpc.ClientConn, error) {
-	addr := s.serviceName
+	addr := s.addr
+	if addr == "" {
+		addr = s.serviceName
+	}
 	if s.port > 0 {
 		addr = fmt.Sprintf("%s:%v", addr, s.port)
 	}

@@ -22,7 +22,7 @@ type Registry struct {
 
 func (s *Registry) Register(mux *runtime.ServeMux, server *grpc.Server) {
 	mux.HandlePath("GET", "/b", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		c, err := client.NewGRPCClient("127.0.0.1", 9000, nil)
+		c, err := client.NewGRPCClient("test", "127.0.0.1", 9000, nil)
 		fmt.Println(err)
 		err = c.Callback(func(conn *grpc.ClientConn, log logger.SuperLogger) error {
 			c := api.NewSubEffectServiceClient(conn)
