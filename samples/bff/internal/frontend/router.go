@@ -1,4 +1,4 @@
-package backend
+package frontend
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/guzhongzhi/gmicro/client"
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/api"
+	"github.com/guzhongzhi/gmicro/samples/bff/api"
 	"google.golang.org/grpc"
 	"net/http"
 )
