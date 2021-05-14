@@ -1,40 +1,26 @@
 package backend
 
 import (
-	"context"
-	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/guzhongzhi/gmicro/samples/bff/api"
-	"github.com/guzhongzhi/gmicro/client"
-	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
 	"google.golang.org/grpc"
-	"net/http"
 )
 
 func NewRegister() server.Registry {
 	return &Registry{
+		user: &User{},
 	}
 }
 
 type Registry struct {
+	user *User
 }
 
-func (s *Registry) Register(mux *runtime.ServeMux, server *grpc.Server) {
-	mux.HandlePath("GET", "/b", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		c, err := client.NewGRPCClient("test", "127.0.0.1", 9000, nil)
-		fmt.Println(err)
-		err = c.Callback(func(conn *grpc.ClientConn, log logger.SuperLogger) error {
-			c := api.NewSubEffectServiceClient(conn)
-			in := &api.UpsertRequest{}
-			_, err := c.Create(context.Background(), in)
-			return err
-		})
-		fmt.Println(err)
-		in := &api.UpsertRequest{}
-		rsp := &api.UpsertResponse{}
-		err = c.Call(context.Background(), "/api.SubEffectService/Create", in, rsp)
-		fmt.Println(err)
-		w.Write([]byte("eee"))
-	})
+func (s *Registry) Register(mux *runtime.ServeMux, server *grpc.Server, router server.Router) {
+	router.SetTagName("json")
+	router.HandlePath("POST", "/user", s.user.Create).
+		HandlePath("GET", "/user/{id}", s.user.Delete).
+		HandlePath("PUT", "/user/{id}", s.user.Update).
+		HandlePath("DELETE", "/user/{id}", s.user.Delete).
+		HandlePath("PATCH", "/user/{id}", s.user.Update)
 }
