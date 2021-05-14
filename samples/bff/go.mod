@@ -1,4 +1,4 @@
-module github.com/guzhongzhi/gmicro/test
+module github.com/guzhongzhi/gmicro/samples/bff
 
         go 1.15
 

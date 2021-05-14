@@ -6,7 +6,7 @@ import "github.com/srikrsna/protoc-gen-gotag/tagger/tagger.proto";
 
 package api;
 
-option go_package = "github.com/guzhongzhi/gmicro/test/api";
+option go_package = "github.com/guzhongzhi/gmicro/samples/bff/api";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_unrecognized_all) = false;

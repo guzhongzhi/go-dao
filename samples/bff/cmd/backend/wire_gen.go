@@ -8,8 +8,8 @@ package main
 import (
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/internal/backend"
-	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
+	"github.com/guzhongzhi/gmicro/samples/bff/internal/backend"
+	"github.com/guzhongzhi/gmicro/samples/bff/internal/infrastructure"
 )
 
 // Injectors from wire.go:

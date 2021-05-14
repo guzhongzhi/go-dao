@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/guzhongzhi/gmicro/samples/bff/api"
 	"github.com/guzhongzhi/gmicro/client"
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/api"
 	"google.golang.org/grpc"
 	"net/http"
 )

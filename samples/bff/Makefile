@@ -20,7 +20,9 @@ proto:
 	protoc $(protocImport) --go_out=paths=source_relative:.   --go-grpc_out=paths=source_relative:.  --grpc-gateway_out=paths=source_relative:. --openapiv2_out=.  api/*.proto
 	protoc $(protocImport) --gotag_out=paths=source_relative:.  api/*.proto
 
-build:
-	go build -o ./bin/app $(moduleName)/cmd/app
+frontend:
+	go build -o ./bin/frontend $(moduleName)/cmd/frontend
+backend:
+	go build -o ./bin/backend $(moduleName)/cmd/backend
 wire:
 	wire gen $(moduleName)/cmd/app

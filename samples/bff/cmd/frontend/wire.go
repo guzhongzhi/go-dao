@@ -7,8 +7,8 @@ import (
 	"github.com/google/wire"
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/internal/application"
-	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
+	"github.com/guzhongzhi/gmicro/samples/bff/internal/frontend"
+	"github.com/guzhongzhi/gmicro/samples/bff/internal/infrastructure"
 )
 
 //initApp init kratos application.
@@ -20,6 +20,6 @@ func initApp(
 ) (*server.Server, func(), error) {
 	panic(wire.Build(
 		server.NewServer,
-		application.ProviderSet,
+		frontend.ProviderSet,
 	))
 }

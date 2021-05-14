@@ -7,7 +7,7 @@ import (
 	"github.com/guzhongzhi/gmicro/console"
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/server"
-	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
+	"github.com/guzhongzhi/gmicro/samples/bff/internal/infrastructure"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
