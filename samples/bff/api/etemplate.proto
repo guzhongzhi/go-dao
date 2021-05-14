@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "github.com/srikrsna/protoc-gen-gotag/tagger/tagger.proto";
+
+package api;
+
+option go_package = "github.com/guzhongzhi/gmicro/test/api";
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message Classify {
+    string id = 1;
+    string value = 2;
+    string icon = 3;
+}
+
+message UpsertRequest {
+
+}
+
+message UpsertResponse {
+    string id = 1 [(tagger.tags) = 'json:"id"'];
+}
+
+
+service SubEffectService {
+    rpc Create (UpsertRequest) returns (UpsertResponse) {
+        option (google.api.http) = {
+          get: "/v1/sub-effects"
+          //body: "*"
+        };
+    };
+
+}
