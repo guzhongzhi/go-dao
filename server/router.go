@@ -34,12 +34,12 @@ func (s *router) SetTagName(v string) {
 }
 
 func (s *router) HandlePath(mesh string, path string, call interface{}) Router {
-	s.mux.HandlePath(mesh, path, s.handler(call))
+	s.mux.HandlePath(mesh, path, s.handler(mesh, path, call))
 	return s
 }
 
 func (s *router) Handle(mesh string, path runtime.Pattern, call interface{}) Router {
-	s.mux.Handle(mesh, path, s.handler(call))
+	s.mux.Handle(mesh, path, s.handler(mesh, path.String(), call))
 	return s
 }
 
@@ -73,15 +73,13 @@ func (s *router) buildCallParams(callType reflect.Type, r *http.Request, pathPar
 	return []reflect.Value{reflect.ValueOf(in)}, nil
 }
 
-func (s *router) handler(call interface{}) runtime.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		c := reflect.TypeOf(call)
-		if c.Kind() != reflect.Func {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("the call of http handle must bu a func"))
-			return
-		}
+func (s *router) handler(mesh string, path string, call interface{}) runtime.HandlerFunc {
+	c := reflect.TypeOf(call)
+	if c.Kind() != reflect.Func {
+		panic(fmt.Sprintf("the %s:%s call of http handle must bu a func", mesh, path))
+	}
 
+	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		params, err := s.buildCallParams(c, r, pathParams)
 		if err != nil {
 			w.WriteHeader(http.StatusOK)

@@ -9,6 +9,7 @@ import (
 	"github.com/guzhongzhi/gmicro/samples/bff/api"
 	"google.golang.org/grpc"
 	"net/http"
+	"time"
 )
 
 type UserCreateMessage struct {
@@ -45,6 +46,6 @@ func (s *User) Update(UserCreateMessage) render.Render {
 }
 func (s *User) Delete(id UserCreateMessage) render.Render {
 	return render.Text{
-		Content: fmt.Sprintf("%s", *id.ID),
+		Content: fmt.Sprintf("%s:%v", *id.ID, time.Now().UnixNano()),
 	}
 }

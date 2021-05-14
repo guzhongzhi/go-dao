@@ -3,6 +3,7 @@ module github.com/guzhongzhi/gmicro
 go 1.15
 
 require (
+	github.com/go-playground/form v3.1.4+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/wire v0.5.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.4.0

@@ -19,6 +19,7 @@ message Classify {
 }
 
 message UpsertRequest {
+    string id = 1;
 
 }
 

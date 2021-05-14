@@ -18,13 +18,13 @@ import (
 )
 
 type Registry interface {
-	Register(mux *runtime.ServeMux, server *grpc.Server)
+	Register(mux *runtime.ServeMux, server *grpc.Server, router Router)
 }
 
-type RegistryFunc func(mux *runtime.ServeMux, server *grpc.Server)
+type RegistryFunc func(mux *runtime.ServeMux, server *grpc.Server, router Router)
 
-func (s RegistryFunc) Register(mux *runtime.ServeMux, server *grpc.Server) {
-	s(mux, server)
+func (s RegistryFunc) Register(mux *runtime.ServeMux, server *grpc.Server, router Router) {
+	s(mux, server, router)
 }
 
 func NewServer(config *Config, register Registry, logger logger.SuperLogger) *Server {
@@ -135,7 +135,8 @@ func (s *Server) serveGRPC(grpcServer *grpc.Server) {
 func (s *Server) Serve() error {
 	grpcServer := grpc.NewServer(s.config.GRPC.Options...)
 	mux := runtime.NewServeMux()
-	s.register.Register(mux, grpcServer)
+	r := NewRouter(mux)
+	s.register.Register(mux, grpcServer, r)
 
 	go s.serveGRPC(grpcServer)
 	go s.serveHTTP(mux)
