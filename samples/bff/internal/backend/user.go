@@ -7,19 +7,31 @@ import (
 	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/guzhongzhi/gmicro/render"
 	"github.com/guzhongzhi/gmicro/samples/bff/api"
+	"github.com/guzhongzhi/gmicro/server"
 	"google.golang.org/grpc"
 	"net/http"
 	"time"
 )
 
+type ADD struct {
+	Line1    string `json:"line1"`
+	PostCode string `json:"post_code"`
+}
+
 type UserCreateMessage struct {
-	ID *string `json:"id"`
+	ID      *string `json:"id"`
+	Name    string  `json:"name"`
+	Address struct {
+		Line1    string `json:"line1"`
+		PostCode string `json:"post_code"`
+	} `json:"address"`
+	Address2 *ADD `json:"address_2"`
 }
 
 type User struct {
 }
 
-func (s *User) Create(message UserCreateMessage) render.Render {
+func (s *User) Create(ctx server.Context, message UserCreateMessage) render.Render {
 	c, err := client.NewGRPCClient("test", "127.0.0.1", 9000, nil)
 	fmt.Println(err)
 	err = c.Callback(func(conn *grpc.ClientConn, log logger.SuperLogger) error {
@@ -38,13 +50,13 @@ func (s *User) Create(message UserCreateMessage) render.Render {
 	}
 }
 
-func (s *User) Update(UserCreateMessage) render.Render {
+func (s *User) Update(ctx server.Context, v UserCreateMessage) render.Render {
 	return render.Text{
 		Content: "fdsafsad",
 	}
-
 }
-func (s *User) Delete(id UserCreateMessage) render.Render {
+
+func (s *User) Delete(ctx server.Context, id UserCreateMessage) render.Render {
 	return render.Text{
 		Content: fmt.Sprintf("%s:%v", *id.ID, time.Now().UnixNano()),
 	}
