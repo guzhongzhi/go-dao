@@ -125,7 +125,6 @@ func (s *router) buildCallParams(callType reflect.Type, r *http.Request, pathPar
 }
 
 func (s *router) createInJSON(callType reflect.Type) interface{} {
-	fmt.Println("callType.NumIn()", callType.NumIn())
 	if callType.NumIn() <= 1 {
 		return "{}"
 	}
@@ -144,7 +143,7 @@ func (s *router) loopType(inType reflect.Type) interface{} {
 		if name == "" {
 			continue
 		}
-		fmt.Println(name, f.Type.Kind())
+
 		if f.Type.Kind() == reflect.Ptr && f.Type.Elem().Kind() == reflect.Struct {
 			fields[name] = s.loopType(f.Type.Elem())
 		} else if f.Type.Kind() == reflect.Struct {
