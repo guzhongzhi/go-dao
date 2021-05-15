@@ -55,8 +55,8 @@ func (s *User) Update(ctx context.Context, v UserCreateMessage) render.Render {
 	}
 }
 
-func (s *User) Delete(ctx context.Context, id UserCreateMessage) render.Render {
+func (s *User) Delete(ctx context.Context, v struct{ Id string `json:"id"` }) render.Render {
 	return render.Text{
-		Content: fmt.Sprintf("%s:%v", *id.ID, time.Now().UnixNano()),
+		Content: fmt.Sprintf("%v", time.Now().UnixNano()),
 	}
 }

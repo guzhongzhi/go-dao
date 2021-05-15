@@ -18,7 +18,8 @@ type Registry struct {
 
 func (s *Registry) Register(mux *runtime.ServeMux, server *grpc.Server, router server.Router) {
 	router.SetTagName("json")
-	router.HandlePath("POST", "/user", s.user.Create).
+	router.
+		HandlePath("POST", "/user", s.user.Create).
 		HandlePath("GET", "/user/{id}", s.user.Delete).
 		HandlePath("PUT", "/user/{id}", s.user.Update).
 		HandlePath("DELETE", "/user/{id}", s.user.Delete).
