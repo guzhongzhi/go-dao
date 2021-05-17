@@ -1,14 +1,25 @@
 package render
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type Text struct {
-	Content string
+	content string
 	Status  int
 }
 
+func (s Text) SetData(v interface{}) {
+	s.content = fmt.Sprintf("%v", v)
+}
+
+func (s Text) Swagger() string {
+	return "{}"
+}
+
 func (s Text) Bytes() ([]byte, error) {
-	return []byte(s.Content), nil
+	return []byte(s.content), nil
 }
 
 func (s Text) Render(w http.ResponseWriter) error {

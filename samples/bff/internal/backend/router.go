@@ -20,7 +20,7 @@ func (s *Registry) Register(mux *runtime.ServeMux, server *grpc.Server, router s
 	router.SetTagName("json")
 	router.
 		HandlePath("POST", "/user", s.user.Create).
-		HandlePath("GET", "/user/{id}", s.user.Delete).
+		HandlePath("GET", "/user/{id}", s.user.Get).
 		HandlePath("PUT", "/user/{id}", s.user.Update).
 		HandlePath("DELETE", "/user/{id}", s.user.Delete).
 		HandlePath("PATCH", "/user/{id}", s.user.Update)

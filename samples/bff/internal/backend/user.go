@@ -9,7 +9,6 @@ import (
 	"github.com/guzhongzhi/gmicro/samples/bff/api"
 	"google.golang.org/grpc"
 	"net/http"
-	"time"
 )
 
 type ADD struct {
@@ -24,13 +23,18 @@ type UserCreateMessage struct {
 		Line1    string `json:"line1"`
 		PostCode string `json:"post_code"`
 	} `json:"address"`
-	Address2 *ADD `json:"address_2"`
+	Address2  *ADD `json:"address_2"`
+	IsBlocked bool `json:"is_blocked"`
+}
+
+type UserCreateResponse struct {
+	ID string `json:"id"`
 }
 
 type User struct {
 }
 
-func (s *User) Create(ctx context.Context, message UserCreateMessage) render.Render {
+func (s *User) Create(ctx context.Context, message UserCreateMessage) (render.Render, *UserCreateResponse) {
 	c, err := client.NewGRPCClient("test", "127.0.0.1", 9000, nil)
 	fmt.Println(err)
 	err = c.Callback(func(conn *grpc.ClientConn, log logger.SuperLogger) error {
@@ -44,19 +48,18 @@ func (s *User) Create(ctx context.Context, message UserCreateMessage) render.Ren
 	rsp := &api.UpsertResponse{}
 	err = c.Call(context.Background(), "/api.SubEffectService/Create", in, rsp)
 	return render.JSON{
-		Data:   rsp,
 		Status: http.StatusOK,
-	}
+	}, &UserCreateResponse{}
 }
 
-func (s *User) Update(ctx context.Context, v UserCreateMessage) render.Render {
-	return render.Text{
-		Content: "fdsafsad",
-	}
+func (s *User) Update(ctx context.Context, v UserCreateMessage) (render.Render, *UserCreateResponse) {
+	return render.Text{}, &UserCreateResponse{}
 }
 
-func (s *User) Delete(ctx context.Context, v struct{ Id string `json:"id"` }) render.Render {
-	return render.Text{
-		Content: fmt.Sprintf("%v", time.Now().UnixNano()),
-	}
+func (s *User) Delete(ctx context.Context, v struct{ Id string `json:"id"` }) (render.Render, *UserCreateResponse) {
+	return render.Text{}, &UserCreateResponse{}
+}
+
+func (s *User) Get(ctx context.Context, v struct{ Id string `json:"id"` }) (render.Render, string) {
+	return render.Text{}, ""
 }

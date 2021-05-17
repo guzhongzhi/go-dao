@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/form"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/guzhongzhi/gmicro/render"
+	"github.com/guzhongzhi/gmicro/utils"
 	"net/http"
 	"reflect"
 )
@@ -39,17 +40,30 @@ func NewRouter(mux *runtime.ServeMux) Router {
 	mux.HandlePath("GET", "/routers", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		h := `<style>
 .method-title {
-	background:#e1e1e1;
+	background:#000000;
 	padding:10px 4px;
+	font-weight: bold;
+	font-size: 16px;
+	color: #FFF;
 }
 .method {
+	padding:10px;
+}
+.method-params-title, .method-out-title {
+	padding:4px 0px;
+
+}
+.method-params-body, .method-out-body {
+    margin-top:10px;
+	background:#e1e1e1;
 	padding:10px;
 }
 </style>`
 		for _, p := range s.paths {
 			h += "<div class='method'>"
-			h += fmt.Sprintf("<div class='method-title'>%s  %s<br></div>", p.Method, p.Path)
-			h += fmt.Sprintf("<div class='method-params'><pre>%s</pre></div>", p.Params)
+			h += fmt.Sprintf("<div class='method-title'> %s  %s<br></div>", p.Method, p.Path)
+			h += fmt.Sprintf("<div class='method-params'><div class='method-params-title'>Request:</div><pre class='method-params-body'>%s</pre></div>", p.Params)
+			h += fmt.Sprintf("<div class='method-out'><div class='method-out-title'>Response:</div><pre class='method-out-body'>%s</pre></div>", p.Response)
 			h += "</div>"
 		}
 		w.Header().Set("content-type", "text/html")
@@ -59,9 +73,10 @@ func NewRouter(mux *runtime.ServeMux) Router {
 }
 
 type Path struct {
-	Method string
-	Path   string
-	Params interface{}
+	Method   string
+	Path     string
+	Params   interface{}
+	Response interface{}
 }
 
 type router struct {
@@ -134,25 +149,18 @@ func (s *router) createInJSON(callType reflect.Type) interface{} {
 	return js
 }
 
-func (s *router) loopType(inType reflect.Type) interface{} {
-	fields := make(map[string]interface{})
-	num := inType.NumField()
-	for i := 0; i < num; i++ {
-		f := inType.Field(i)
-		name := f.Tag.Get(s.tagName)
-		if name == "" {
-			continue
-		}
-
-		if f.Type.Kind() == reflect.Ptr && f.Type.Elem().Kind() == reflect.Struct {
-			fields[name] = s.loopType(f.Type.Elem())
-		} else if f.Type.Kind() == reflect.Struct {
-			fields[name] = s.loopType(f.Type)
-		} else {
-			fields[name] = f.Type.String()
-		}
+func (s *router) createOutJSON(callType reflect.Type) interface{} {
+	if callType.NumOut() <= 0 {
+		return "{}"
 	}
-	return fields
+	inType := callType.Out(1)
+	fields := s.loopType(inType)
+	js, _ := json.MarshalIndent(fields, "", "    ")
+	return js
+}
+
+func (s *router) loopType(inType reflect.Type) interface{} {
+	return utils.LoopType(s.tagName, inType)
 }
 
 func (s *router) handler(mesh string, path string, call interface{}) runtime.HandlerFunc {
@@ -161,9 +169,10 @@ func (s *router) handler(mesh string, path string, call interface{}) runtime.Han
 		panic(fmt.Sprintf("the %s:%s call of http handle must bu a func", mesh, path))
 	}
 	s.paths = append(s.paths, Path{
-		Method: mesh,
-		Path:   path,
-		Params: s.createInJSON(c),
+		Method:   mesh,
+		Path:     path,
+		Params:   s.createInJSON(c),
+		Response: s.createOutJSON(c),
 	})
 
 	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
@@ -186,6 +195,10 @@ func (s *router) handler(mesh string, path string, call interface{}) runtime.Han
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("the response of the call of '%s' must be a render", v.String())))
 			return
+		}
+		if len(rsp) >= 2 {
+			data := rsp[1].Interface()
+			rr.SetData(data)
 		}
 		rr.Render(w)
 	}
