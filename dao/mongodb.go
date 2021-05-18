@@ -39,12 +39,12 @@ func (s *mongodb) Delete(id interface{}, opts DeleteOptions) error {
 	return nil
 }
 
-func (s *mongodb) Get(id interface{}, data Entity, opts GetOptions) error {
+func (s *mongodb) Get(id interface{}, data Data, opts GetOptions) error {
 	rs := s.coll.FindOne(context.Background(), primitive.M{"_id": id})
 	return rs.Decode(data)
 }
 
-func (s *mongodb) Insert(entity Entity, opts InsertOptions) (id interface{}, err error) {
+func (s *mongodb) Insert(entity Data, opts InsertOptions) (id interface{}, err error) {
 	if !entity.IsNew() {
 		return nil, fmt.Errorf("collection '%s' insert error, the data is not a new record", s.coll.Name())
 	}
@@ -57,7 +57,7 @@ func (s *mongodb) Insert(entity Entity, opts InsertOptions) (id interface{}, err
 	return rs.InsertedID, err
 }
 
-func (s *mongodb) Update(id interface{}, data Entity, updateOptions UpdateOptions) error {
+func (s *mongodb) Update(id interface{}, data Data, updateOptions UpdateOptions) error {
 	_, err := s.coll.UpdateOne(context.Background(), primitive.M{
 		"_id": id,
 	}, primitive.M{"$set": data})

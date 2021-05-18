@@ -4,9 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/olivere/elastic/v7"
 	"reflect"
 )
+
+type ElasticSearchOptions struct {
+	Mapping   string
+	IndexName string
+}
 
 type ElasticSearchDAO interface {
 	DAO
@@ -14,18 +20,29 @@ type ElasticSearchDAO interface {
 	IndexName() string
 }
 
-func NewElasticSearchDAO(client *elastic.Client, indexName string) ElasticSearchDAO {
+type ElasticSearchConfig struct {
+	Addresses []string
+}
+
+func NewElasticSearchDAO(client *elastic.Client, options ElasticSearchOptions, log logger.SuperLogger) ElasticSearchDAO {
+	if log == nil {
+		log = logger.Default()
+	}
 	e := &elasticsearch{
-		client: client,
-		index:  indexName,
+		client:  client,
+		index:   options.IndexName,
+		options: options,
+		logger:  log,
 	}
 	e.init()
 	return e
 }
 
 type elasticsearch struct {
-	client *elastic.Client
-	index  string
+	client  *elastic.Client
+	index   string
+	options ElasticSearchOptions
+	logger  logger.SuperLogger
 }
 
 func (s *elasticsearch) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error) {
@@ -41,18 +58,29 @@ func (s *elasticsearch) Client() *elastic.Client {
 }
 
 func (s *elasticsearch) init() {
-	b, _ := s.client.IndexExists(s.index).Do(context.Background())
+	b, err := s.client.IndexExists(s.index).Do(context.Background())
+	if err != nil {
+		panic(err)
+	}
 	if !b {
-		s.client.CreateIndex(s.index).Do(context.Background())
+		icr, err := s.client.CreateIndex(s.index).BodyString(s.options.Mapping).Do(context.Background())
+		if err != nil {
+			panic(err)
+		}
+		s.logger.Debugf("create new index '%s' succeed,%v", s.index, icr.Acknowledged)
 	}
 }
 
-func (s *elasticsearch) Insert(entity Entity, opts InsertOptions) (id interface{}, err error) {
+func (s *elasticsearch) Insert(entity Data, opts InsertOptions) (id interface{}, err error) {
 	js, err := json.Marshal(entity)
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := s.client.Index().Index(s.index).BodyJson(string(js)).Do(context.Background())
+	q := s.client.Index().Index(s.index).BodyJson(string(js))
+	if !entity.IsNew() {
+		q.Id(fmt.Sprintf("%v", entity.ID()))
+	}
+	rsp, err := q.Do(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +88,14 @@ func (s *elasticsearch) Insert(entity Entity, opts InsertOptions) (id interface{
 	return rsp.Id, nil
 }
 
-func (s *elasticsearch) Update(id interface{}, data Entity, opts UpdateOptions) error {
-	_, err := s.client.Update().
+func (s *elasticsearch) Update(id interface{}, data Data, opts UpdateOptions) error {
+	s.logger.Debugf("update doc '%s'.'%s'", s.index, id)
+	updateService := s.client.Update().
 		Index(s.index).
 		Id(fmt.Sprintf("%s", id)).
-		Doc(data).
-		Do(context.Background())
+		Doc(data)
+
+	_, err := updateService.Do(context.Background())
 
 	return err
 }
@@ -135,24 +165,21 @@ func (s *elasticsearch) Delete(id interface{}, opts DeleteOptions) error {
 	return nil
 }
 
-func (s *elasticsearch) Get(id interface{}, data Entity, opts GetOptions) error {
+func (s *elasticsearch) Get(id interface{}, data Data, opts GetOptions) error {
 	rs, err := s.client.Get().
 		Index(s.index).
 		Id(fmt.Sprintf("%s", id)).
 		Do(context.Background())
 
 	if err != nil {
-		return err
+		if !elastic.IsNotFound(err) {
+			return err
+		} else {
+			return nil
+		}
 	}
-	body, err := rs.Source.MarshalJSON()
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(body))
-	err = json.Unmarshal(body, data)
-	if err != nil {
-		return err
-	}
+
+	err = json.Unmarshal(rs.Source, data)
 	data.SetID(rs.Id)
 
 	return nil

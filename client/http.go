@@ -44,8 +44,11 @@ func (s *httpClient) do(method string, u string, body io.Reader, contentType str
 	s.logger.Debugf("start to send http request to '%s', method=%s, headers=%v,content-type=%v", u, method, headers, contentType)
 	req.Header.Set("Content-Type", contentType)
 	s.logger.Debugf("end send http request to '%s'", u)
-	for k, v := range headers {
-		req.Header.Set(k, v)
+
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
 	}
 
 	client := http.DefaultClient

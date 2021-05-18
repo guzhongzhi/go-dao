@@ -53,7 +53,7 @@ func (s *mysql) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}
 	} else {
 		txOptions = &sql.TxOptions{}
 	}
-	
+
 	return s.DB().BeginTx(context.Background(), txOptions)
 }
 
@@ -61,7 +61,7 @@ func (s *mysql) DB() *sql.DB {
 	return s.db
 }
 
-func (s *mysql) Insert(entity Entity, opts InsertOptions) (interface{}, error) {
+func (s *mysql) Insert(entity Data, opts InsertOptions) (interface{}, error) {
 	fieldNames, params := s.buildData(entity)
 	sq := "INSERT INTO `%s` (%s) VALUES (%s)"
 	placeHolder := strings.Repeat("? , ", len(fieldNames))
@@ -99,7 +99,7 @@ func (s *mysql) buildData(data interface{}) ([]string, []interface{}) {
 	return fieldNames, params
 }
 
-func (s *mysql) Update(id interface{}, data Entity, opts UpdateOptions) error {
+func (s *mysql) Update(id interface{}, data Data, opts UpdateOptions) error {
 	fieldNames, params := s.buildData(data)
 	sq := "UPDATE `%s` SET %s WHERE `%s` = ?"
 	setValue := strings.Join(fieldNames, " = ? ,")
@@ -200,7 +200,7 @@ func (s *mysql) newStruct(data interface{}) interface{} {
 	return ins
 }
 
-func (s *mysql) Get(id interface{}, data Entity, opts GetOptions) error {
+func (s *mysql) Get(id interface{}, data Data, opts GetOptions) error {
 
 	sq := ""
 	ins := s.newStruct(data)
