@@ -59,13 +59,13 @@ func New(cfg *Config) Console {
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:    "env",
-			EnvVars: []string{cfg.EnvPrefix + "env"},
+			EnvVars: []string{cfg.EnvPrefix + "ENV"},
 			Value:   "dev",
 			Usage:   "specify runtime environment: dev, qa, prod",
 		},
 		&cli.StringFlag{
 			Name:    "config",
-			EnvVars: []string{cfg.EnvPrefix + "config"},
+			EnvVars: []string{cfg.EnvPrefix + "CONFIG"},
 			Value:   cfg.BasePath + "/configs/",
 			Usage:   "config file directory",
 		},
