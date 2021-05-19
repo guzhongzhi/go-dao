@@ -39,7 +39,7 @@ func (s *mongodb) Delete(id interface{}, opts DeleteOptions) error {
 	return nil
 }
 
-func (s *mongodb) Get(id interface{}, data Data, opts GetOptions) error {
+func (s *mongodb) FindOne(id interface{}, data Data, opts FindOptions) error {
 	rs := s.coll.FindOne(context.Background(), primitive.M{"_id": id})
 	return rs.Decode(data)
 }

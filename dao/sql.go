@@ -200,8 +200,7 @@ func (s *mysql) newStruct(data interface{}) interface{} {
 	return ins
 }
 
-func (s *mysql) Get(id interface{}, data Data, opts GetOptions) error {
-
+func (s *mysql) FindOne(id interface{}, data Data, opts FindOptions) error {
 	sq := ""
 	ins := s.newStruct(data)
 

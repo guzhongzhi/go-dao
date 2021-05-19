@@ -19,6 +19,6 @@ type DAO interface {
 	Update(id interface{}, data Data, opts UpdateOptions) error
 	Find(data interface{}, opts FindOptions) error
 	Delete(id interface{}, opts DeleteOptions) error
-	Get(id interface{}, data Data, opts GetOptions) error
+	FindOne(id interface{}, data Data, opts FindOptions) error
 	BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error)
 }

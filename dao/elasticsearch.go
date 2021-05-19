@@ -165,7 +165,7 @@ func (s *elasticsearch) Delete(id interface{}, opts DeleteOptions) error {
 	return nil
 }
 
-func (s *elasticsearch) Get(id interface{}, data Data, opts GetOptions) error {
+func (s *elasticsearch) FindOne(id interface{}, data Data, opts FindOptions) error {
 	rs, err := s.client.Get().
 		Index(s.index).
 		Id(fmt.Sprintf("%s", id)).

@@ -3,10 +3,6 @@ package dao
 type TxOptions interface {
 }
 
-type GetOptions interface {
-	Options() (interface{}, error)
-}
-
 type NoopTransactionOptions struct {
 	tx interface{}
 }
