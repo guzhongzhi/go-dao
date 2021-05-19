@@ -18,6 +18,7 @@ import (
 )
 
 type Registry interface {
+	NewServeMux() *runtime.ServeMux
 	Register(mux *runtime.ServeMux, server *grpc.Server, router Router)
 }
 
@@ -134,7 +135,12 @@ func (s *Server) serveGRPC(grpcServer *grpc.Server) {
 
 func (s *Server) Serve() error {
 	grpcServer := grpc.NewServer(s.config.GRPC.Options...)
-	mux := runtime.NewServeMux()
+
+	mux := s.register.NewServeMux()
+	if mux == nil {
+		mux = runtime.NewServeMux()
+	}
+
 	r := NewRouter(mux)
 	s.register.Register(mux, grpcServer, r)
 
