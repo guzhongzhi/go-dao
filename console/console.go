@@ -72,7 +72,8 @@ func New(cfg *Config) Console {
 	}
 	app.Commands = []*cli.Command{
 		&cli.Command{
-			Name: "show:env",
+			Name:  "env:show",
+			Usage: "display all the config variables which can be changed by ENV",
 			Action: func(ctx *cli.Context) error {
 				env := ctx.String("env")
 				cfgPath := ctx.String("config")
