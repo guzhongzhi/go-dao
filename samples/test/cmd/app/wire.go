@@ -11,8 +11,7 @@ import (
 	"github.com/guzhongzhi/gmicro/test/internal/infrastructure"
 )
 
-//initApp init kratos application.
-//go:generate kratos t wire
+//go:generate wire gen
 func initApp(
 	cfg *infrastructure.Bootstrap,
 	l logger.SuperLogger,

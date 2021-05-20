@@ -21,7 +21,32 @@ type ElasticSearchDAO interface {
 }
 
 type ElasticSearchConfig struct {
-	Addresses []string
+	Addresses   []string
+	Sniff       bool
+	HealthCheck bool
+	Username    string
+	Password    string
+}
+
+func (s *ElasticSearchConfig) toOptions() []elastic.ClientOptionFunc {
+	opts := make([]elastic.ClientOptionFunc, 0)
+
+	opts = append(opts, elastic.SetSniff(s.Sniff))
+	opts = append(opts, elastic.SetURL(s.Addresses...))
+	opts = append(opts, elastic.SetHealthcheck(s.HealthCheck))
+	opts = append(opts, elastic.SetSniff(s.Sniff))
+	if s.Username != "" && s.Password != "" {
+		opts = append(opts, elastic.SetBasicAuth(s.Username, s.Password))
+	}
+	return opts
+}
+
+func NewElasticClient(cfg *ElasticSearchConfig) *elastic.Client {
+	es, err := elastic.NewClient(cfg.toOptions()...)
+	if err != nil {
+		panic(err)
+	}
+	return es
 }
 
 func NewElasticSearchDAO(client *elastic.Client, options ElasticSearchOptions, log logger.SuperLogger) ElasticSearchDAO {
