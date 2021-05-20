@@ -19,6 +19,10 @@ type Config struct {
 	out       interface{} //application config struct
 }
 
+//name: application name
+//version: application version
+//basePath: the base path of the application
+//out: the config struct of the application
 func NewConfig(name, version string, basePath string, out interface{}) *Config {
 	if name == "" {
 		name = "test"
