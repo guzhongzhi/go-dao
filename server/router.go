@@ -16,8 +16,10 @@ type Context struct {
 	context.Context
 }
 
+var ctxRequest struct{}
+
 func (s Context) Request() *http.Request {
-	v := s.Value("r_context")
+	v := s.Value(ctxRequest)
 	if v == nil {
 		return nil
 	}

@@ -16,6 +16,10 @@ type Registry struct {
 	user *User
 }
 
+func (s *Registry) NewServeMux() *runtime.ServeMux {
+	return nil
+}
+
 func (s *Registry) Register(mux *runtime.ServeMux, server *grpc.Server, router server.Router) {
 	router.SetTagName("json")
 	router.
