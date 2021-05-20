@@ -8,6 +8,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type MongodbConfig struct {
+	DSN string
+}
+
+func NewMongodbClient(cfg *MongodbConfig) *mongo.Client {
+	opts := options.Client().ApplyURI(cfg.DSN)
+	c, err := mongo.Connect(context.Background(), opts)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
 type MongodbDAO interface {
 	DAO
 	Collection() *mongo.Collection
