@@ -16,7 +16,7 @@ type Config struct {
 	Version   string
 	BasePath  string
 	EnvPrefix string
-	out       interface{}
+	out       interface{} //application config struct
 }
 
 func NewConfig(name, version string, basePath string, out interface{}) *Config {
@@ -59,13 +59,13 @@ func New(cfg *Config) Console {
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:    "env",
-			EnvVars: []string{cfg.EnvPrefix + "ENV"},
+			EnvVars: []string{cfg.EnvPrefix + "ENV", cfg.EnvPrefix + "env"},
 			Value:   "dev",
 			Usage:   "specify runtime environment: dev, qa, prod",
 		},
 		&cli.StringFlag{
 			Name:    "config",
-			EnvVars: []string{cfg.EnvPrefix + "CONFIG"},
+			EnvVars: []string{cfg.EnvPrefix + "CONFIG", cfg.EnvPrefix + "config"},
 			Value:   cfg.BasePath + "/configs/",
 			Usage:   "config file directory",
 		},
