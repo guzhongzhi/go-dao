@@ -3,13 +3,13 @@ package dao
 import "context"
 
 type Entity interface {
-	Data() Data
+	GetData() Data
 	SetData(v Data)
 }
 
 type Data interface {
 	IsNew() bool
-	ID() interface{}
+	GetID() interface{}
 	SetID(v interface{})
 	String() string
 }

@@ -103,7 +103,7 @@ func (s *elasticsearch) Insert(entity Data, opts InsertOptions) (id interface{},
 	}
 	q := s.client.Index().Index(s.index).BodyJson(string(js))
 	if !entity.IsNew() {
-		q.Id(fmt.Sprintf("%v", entity.ID()))
+		q.Id(fmt.Sprintf("%v", entity.GetID()))
 	}
 	rsp, err := q.Do(context.Background())
 	if err != nil {
