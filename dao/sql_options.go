@@ -1,9 +1,9 @@
 package dao
 
-import "github.com/guzhongzhi/gmicro/logger"
+import "github.com/pinguo-icc/kratos-library/logger"
 
 type SQLDAOOptions struct {
-	Logger    logger.SuperLogger
+	Logger    logger.Logger
 	GetSQL    string
 	FindSQL   string
 	DeleteSQL string

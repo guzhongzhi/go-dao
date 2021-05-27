@@ -2,10 +2,17 @@ package logger
 
 import "github.com/sirupsen/logrus"
 
-func Default() SuperLogger {
+func NewLogrus(cfg *Config) Logger {
 	log := logrus.New()
-	log.SetLevel(logrus.DebugLevel)
-	log.SetReportCaller(false)
-	log.SetFormatter(&logrus.JSONFormatter{})
+	level, err := logrus.ParseLevel(cfg.getLevel())
+	if err != nil {
+		panic(err)
+	}
+	log.SetLevel(level)
+	log.SetReportCaller(cfg.ReportCaller)
+	switch cfg.Formatter {
+	case FormatterJSON:
+		log.SetFormatter(&logrus.JSONFormatter{})
+	}
 	return log
 }

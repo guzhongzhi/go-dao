@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/olivere/elastic/v7"
+	"github.com/pinguo-icc/kratos-library/logger"
 	"reflect"
 )
 
@@ -49,7 +49,7 @@ func NewElasticClient(cfg *ElasticSearchConfig) *elastic.Client {
 	return es
 }
 
-func NewElasticSearchDAO(client *elastic.Client, options ElasticSearchOptions, log logger.SuperLogger) ElasticSearchDAO {
+func NewElasticSearchDAO(client *elastic.Client, options ElasticSearchOptions, log logger.Logger) ElasticSearchDAO {
 	if log == nil {
 		log = logger.Default()
 	}
@@ -67,7 +67,7 @@ type elasticsearch struct {
 	client  *elastic.Client
 	index   string
 	options ElasticSearchOptions
-	logger  logger.SuperLogger
+	logger  logger.Logger
 }
 
 func (s *elasticsearch) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error) {

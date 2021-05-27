@@ -1,5 +1,16 @@
 package logger
 
+const (
+	LevelFatal   = "fatal"
+	LevelError   = "error"
+	LevelWarning = "warning"
+	LevelInfo    = "info"
+	LevelDebug   = "debug"
+	LevelTrace   = "trace"
+
+	FormatterJSON = "json"
+)
+
 type Loggerf interface {
 	Debugf(format string, args ...interface{})
 
@@ -11,6 +22,7 @@ type Loggerf interface {
 }
 
 type Logger interface {
+	Loggerf
 	Debug(args ...interface{})
 
 	Info(args ...interface{})
@@ -24,7 +36,32 @@ type CloserLogger interface {
 	Close() error
 }
 
-type SuperLogger interface {
-	Logger
-	Loggerf
+var defaultLogger Logger
+
+func Default() Logger {
+	if defaultLogger == nil {
+		defaultLogger = NewLogrus(&Config{})
+	}
+	return defaultLogger
+}
+
+type Config struct {
+	Level        string
+	FileName     string
+	ReportCaller bool
+	Formatter    string
+}
+
+func (s *Config) getLevel() string {
+	if s.Level == "" {
+		s.Level = LevelInfo
+	}
+	return s.Level
+}
+
+func (s *Config) getFormatter() string {
+	if s.Formatter == "" {
+		s.Formatter = FormatterJSON
+	}
+	return s.Formatter
 }

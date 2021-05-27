@@ -9,7 +9,13 @@ import (
 )
 
 type MongodbConfig struct {
-	DSN string
+	DSN      string
+	Database string
+}
+
+func NewMongodbDatabase(cfg *MongodbConfig) *mongo.Database {
+	client := NewMongodbClient(cfg)
+	return client.Database(cfg.Database)
 }
 
 func NewMongodbClient(cfg *MongodbConfig) *mongo.Client {
@@ -21,15 +27,26 @@ func NewMongodbClient(cfg *MongodbConfig) *mongo.Client {
 	return c
 }
 
+type MongodbIndex struct {
+	Name   string
+	Unique bool
+}
+
 type MongodbDAO interface {
 	DAO
 	Collection() *mongo.Collection
+	CreateIndex(name string, keys interface{}, indexOptions *options.IndexOptions) error
+	NewIndexOptions() *options.IndexOptions
+	Indexes() []*MongodbIndex
+	DropIndex(name string) error
 }
 
-func NewMongodbDAO(db *mongo.Database, tableName string, opts options.CollectionOptions) MongodbDAO {
-	return &mongodb{
-		coll: db.Collection(tableName),
+func NewMongodbDAO(db *mongo.Database, tableName string, opts ...*options.CollectionOptions) MongodbDAO {
+	v := &mongodb{
+		coll: db.Collection(tableName, opts...),
 	}
+	v.init()
+	return v
 }
 
 func (s *mongodb) BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error) {
@@ -37,7 +54,65 @@ func (s *mongodb) BeginTransaction(ctx context.Context, tx TxOptions) (interface
 }
 
 type mongodb struct {
-	coll *mongo.Collection
+	coll    *mongo.Collection
+	indexes []*MongodbIndex
+}
+
+func (s *mongodb) init() {
+	ctx := context.Background()
+	cursor, err := s.Collection().Indexes().List(ctx)
+	if err != nil {
+		panic(err)
+	}
+	indexes := make([]*MongodbIndex, 0)
+	err = cursor.All(context.Background(), &indexes)
+	if err != nil {
+		panic(err)
+	}
+	s.indexes = indexes
+}
+
+func (s *mongodb) Indexes() []*MongodbIndex {
+	return s.indexes
+}
+
+func (s *mongodb) newIndexOptions() *options.IndexOptions {
+	opts := &options.IndexOptions{}
+	return opts
+}
+
+func (s *mongodb) NewIndexOptions() *options.IndexOptions {
+	opts := &options.IndexOptions{}
+	return opts
+}
+
+func (s *mongodb) DropIndex(name string) error {
+	_, err := s.coll.Indexes().DropOne(context.Background(), name)
+	if err != nil {
+		return err
+	}
+	s.init()
+	return nil
+}
+
+func (s *mongodb) CreateIndex(name string, keys interface{}, indexOptions *options.IndexOptions) error {
+	for _, idx := range s.indexes {
+		if idx.Name == name {
+			return nil
+		}
+	}
+	indexOptions.SetName(name)
+	ctx := context.Background()
+	indexModel := mongo.IndexModel{
+		Keys:    keys,
+		Options: indexOptions,
+	}
+	_, err := s.Collection().Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		panic(err)
+	}
+	s.init()
+	return nil
 }
 
 func (s *mongodb) Collection() *mongo.Collection {

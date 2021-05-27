@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/kisielk/sqlstruct"
+	"github.com/pinguo-icc/kratos-library/logger"
 	"reflect"
 	"strings"
 )
