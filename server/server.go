@@ -28,7 +28,7 @@ func (s RegistryFunc) Register(mux *runtime.ServeMux, server *grpc.Server, route
 	s(mux, server, router)
 }
 
-func NewServer(config *Config, register Registry, logger logger.SuperLogger) *Server {
+func NewServer(config *Config, register Registry, logger logger.Logger) *Server {
 	return &Server{
 		config:   config,
 		register: register,
@@ -42,7 +42,7 @@ type Server struct {
 	register   Registry
 	grpcServer *grpc.Server
 	httpServer *http.Server
-	logger     logger.SuperLogger
+	logger     logger.Logger
 	sysSig     chan os.Signal
 }
 

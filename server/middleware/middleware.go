@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type Middleware func(h http.Handler, logger logger2.SuperLogger) http.Handler
+type Middleware func(h http.Handler, logger logger2.Logger) http.Handler
 
 var Middlewares = make(map[string]Middleware)
 
