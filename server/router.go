@@ -29,6 +29,7 @@ func NewRouter(mux *runtime.ServeMux) Router {
 		swagger: NewSwagger(),
 	}
 	s.SetTagName("json")
+	return s
 }
 
 type Path struct {
