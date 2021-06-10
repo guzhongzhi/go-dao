@@ -25,6 +25,7 @@ type FindOptions interface {
 	Filter() (interface{}, error)
 	Options() (interface{}, error)
 	Pagination() *Pagination
+	Sorts() interface{}
 }
 
 type InsertOptions interface {

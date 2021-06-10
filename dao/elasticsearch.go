@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/guzhongzhi/gmicro/logger"
 	"github.com/olivere/elastic/v7"
-	"github.com/pinguo-icc/kratos-library/logger"
 	"reflect"
 )
 
@@ -123,6 +123,23 @@ func (s *elasticsearch) Update(id interface{}, data Data, opts UpdateOptions) er
 	_, err := updateService.Do(context.Background())
 
 	return err
+}
+
+func (s *elasticsearch) Count(opts FindOptions) (int64, error) {
+	o := opts.(FindOptions)
+	filter, err := o.Filter()
+	if err != nil {
+		return 0, err
+	}
+	query := s.client.Search().
+		Index(s.index).
+		Query(filter.(elastic.Query))
+
+	rs, err := query.Do(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	return rs.TotalHits(), nil
 }
 
 func (s *elasticsearch) Find(data interface{}, opts FindOptions) error {

@@ -15,6 +15,7 @@ type MongodbConfig struct {
 
 func NewMongodbDatabase(cfg *MongodbConfig) *mongo.Database {
 	client := NewMongodbClient(cfg)
+	fmt.Println(cfg.DSN)
 	return client.Database(cfg.Database)
 }
 
@@ -39,6 +40,7 @@ type MongodbDAO interface {
 	NewIndexOptions() *options.IndexOptions
 	Indexes() []*MongodbIndex
 	DropIndex(name string) error
+	InsertMany(entities []interface{}, opts InsertOptions) (ids []interface{}, err error)
 }
 
 func NewMongodbDAO(db *mongo.Database, tableName string, opts ...*options.CollectionOptions) MongodbDAO {
@@ -155,6 +157,14 @@ func (s *mongodb) Update(id interface{}, data Data, updateOptions UpdateOptions)
 	return nil
 }
 
+func (s *mongodb) Count(opts FindOptions) (int64, error) {
+	filter, err := opts.Filter()
+	if err != nil {
+		return 0, err
+	}
+	return s.coll.CountDocuments(context.Background(), filter)
+}
+
 func (s *mongodb) Find(data interface{}, opts FindOptions) error {
 
 	findOpts := &options.FindOptions{}
@@ -173,6 +183,10 @@ func (s *mongodb) Find(data interface{}, opts FindOptions) error {
 	}
 	opts.Pagination().SetTotal(total)
 
+	if opts.Sorts() != nil {
+		findOpts.SetSort(opts.Sorts())
+	}
+
 	cursor, err := s.coll.Find(context.Background(), filter, findOpts)
 	if err != nil {
 		return fmt.Errorf("collection '%s' find operation error: '%s'", s.coll.Name(), err.Error())
@@ -183,4 +197,13 @@ func (s *mongodb) Find(data interface{}, opts FindOptions) error {
 		return fmt.Errorf("collection '%s' cursor all operation error: '%s'", s.coll.Name(), err.Error())
 	}
 	return nil
+}
+
+func (s *mongodb) InsertMany(entities []interface{}, opts InsertOptions) (ids []interface{}, err error) {
+
+	rs, err := s.coll.InsertMany(context.Background(), entities)
+	if err != nil {
+		return nil, fmt.Errorf("collection '%s' insert error: '%s'", s.coll.Name(), err.Error())
+	}
+	return rs.InsertedIDs, err
 }

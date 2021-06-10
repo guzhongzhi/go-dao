@@ -1,6 +1,6 @@
 package dao
 
-import "github.com/pinguo-icc/kratos-library/logger"
+import "github.com/guzhongzhi/gmicro/logger"
 
 type SQLDAOOptions struct {
 	Logger    logger.Logger

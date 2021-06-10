@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/kisielk/sqlstruct"
-	"github.com/pinguo-icc/kratos-library/logger"
+	"github.com/guzhongzhi/gmicro/logger"
 	"reflect"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/kisielk/sqlstruct"
 )
 
 type SQLDAO interface {
@@ -124,6 +125,10 @@ func (s *mysql) Exec(sq string, params []interface{}, tx TransactionOptions) (sq
 		rs, err = s.db.Exec(sq, params...)
 	}
 	return rs, err
+}
+
+func (s *mysql) Count(opts FindOptions) (int64, error) {
+	panic("not implemented Count for sql dao")
 }
 
 func (s *mysql) Find(data interface{}, opts FindOptions) error {

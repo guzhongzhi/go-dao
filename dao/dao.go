@@ -18,6 +18,7 @@ type DAO interface {
 	Insert(entity Data, opts InsertOptions) (id interface{}, err error)
 	Update(id interface{}, data Data, opts UpdateOptions) error
 	Find(data interface{}, opts FindOptions) error
+	Count(opts FindOptions) (int64, error)
 	Delete(id interface{}, opts DeleteOptions) error
 	FindOne(id interface{}, data Data, opts FindOptions) error
 	BeginTransaction(ctx context.Context, tx TxOptions) (interface{}, error)
