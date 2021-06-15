@@ -1,24 +1,37 @@
 package render
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 )
 
 type JSON struct {
-	data    interface{}
-	Message string
-	Code    int
-	Status  int
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+	Code    int         `json:"code"`
+	Status  int         `json:"status"`
 }
 
-func (s JSON) SetData(v interface{}) {
-	s.data = v
+func (s *JSON) SetHeader(k, v string) {
+	panic("implement me")
 }
 
-func (s JSON) Bytes() ([]byte, error) {
+func (s *JSON) SetContext(ctx context.Context) {
+	panic("implement me")
+}
+
+func (s *JSON) SetError(err error) {
+	panic("implement me")
+}
+
+func (s *JSON) SetData(v interface{}) {
+	s.Data = v
+}
+
+func (s *JSON) Bytes() ([]byte, error) {
 	b, _ := json.Marshal(map[string]interface{}{
-		"data":    s.data,
+		"data":    s.Data,
 		"message": s.Message,
 		"code":    s.Code,
 		"status":  s.Status,
@@ -26,7 +39,7 @@ func (s JSON) Bytes() ([]byte, error) {
 	return b, nil
 }
 
-func (s JSON) Render(w http.ResponseWriter) error {
+func (s *JSON) Render(w http.ResponseWriter) error {
 	w.Header().Add("content-type", s.ContentType())
 	w.WriteHeader(s.Status)
 	body, err := s.Bytes()
@@ -37,6 +50,6 @@ func (s JSON) Render(w http.ResponseWriter) error {
 	return nil
 }
 
-func (s JSON) ContentType() string {
+func (s *JSON) ContentType() string {
 	return "application/json"
 }
