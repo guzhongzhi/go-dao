@@ -136,21 +136,35 @@ func (s *router) handler(mesh string, path string, call interface{}, opts ...Rou
 			return
 		}
 
+		var rr render.Render
+		if routerOptions.ResponseWrapper != nil {
+			rr = routerOptions.ResponseWrapper.(render.Render)
+		} else {
+			rr = render.NewJSON()
+		}
+
 		v := reflect.ValueOf(call)
 		rsp := v.Call(params)
-		if len(rsp) == 0 {
+		switch len(rsp) {
+		case 0:
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("there is no response of the call '%s'", v.String())))
 			return
-		}
-		rr, ok := rsp[0].Interface().(render.Render)
-		if !ok {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("the response of the call of '%s' must be a render", v.String())))
-			return
-		}
-		if len(rsp) >= 2 {
-			data := rsp[1].Interface()
+		case 1:
+			rs, ok := rsp[0].Interface().(render.Render)
+			if !ok {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(fmt.Sprintf("the response of the call of '%s' must be a render", v.String())))
+				return
+			} else {
+				rs.Render(w)
+			}
+		default:
+			data := rsp[0].Interface()
+			err := rsp[1].Interface().(error)
+			if err != nil {
+				rr.SetError(err)
+			}
 			rr.SetData(data)
 		}
 		rr.Render(w)

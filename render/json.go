@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+func NewJSON() Render {
+	return &JSON{}
+}
+
 type JSON struct {
 	Data    interface{} `json:"data"`
 	Message string      `json:"message"`
