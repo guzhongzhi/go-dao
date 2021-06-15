@@ -2,9 +2,7 @@ package render
 
 import (
 	"encoding/json"
-	"github.com/guzhongzhi/gmicro/utils"
 	"net/http"
-	"reflect"
 )
 
 type JSON struct {
@@ -16,14 +14,6 @@ type JSON struct {
 
 func (s JSON) SetData(v interface{}) {
 	s.data = v
-}
-
-func (s JSON) Swagger() string {
-	data := map[string]interface{}{}
-	t := reflect.TypeOf(data)
-	js := utils.MapToJSON(t)
-	body, _ := json.MarshalIndent(js, "", "    ")
-	return string(body)
 }
 
 func (s JSON) Bytes() ([]byte, error) {

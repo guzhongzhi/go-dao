@@ -14,10 +14,6 @@ func (s Text) SetData(v interface{}) {
 	s.content = fmt.Sprintf("%v", v)
 }
 
-func (s Text) Swagger() string {
-	return "{}"
-}
-
 func (s Text) Bytes() ([]byte, error) {
 	return []byte(s.content), nil
 }
