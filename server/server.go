@@ -116,7 +116,7 @@ func (s *Server) serveGRPC(grpcServer *grpc.Server) {
 		return
 	}
 
-	fmt.Println("s.config.GRPC.Disabled", s.config.GRPC.Disabled)
+	s.logger.Debugf("s.config.GRPC.Disabled: %v", s.config.GRPC.Disabled)
 
 	grpcListener, err := net.Listen("tcp", s.config.GRPC.Addr)
 	if err != nil {

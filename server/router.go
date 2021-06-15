@@ -25,25 +25,16 @@ func NewRouter(mux *runtime.ServeMux) Router {
 	s := &router{
 		mux:     mux,
 		decoder: form.NewDecoder(),
-		paths:   make([]Path, 0),
 		swagger: NewSwagger(),
 	}
 	s.SetTagName("json")
 	return s
 }
 
-type Path struct {
-	Method   string
-	Path     string
-	Params   interface{}
-	Response interface{}
-}
-
 type router struct {
 	tagName string
 	mux     *runtime.ServeMux
 	decoder *form.Decoder
-	paths   []Path
 	swagger *Swagger
 }
 
