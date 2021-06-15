@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -9,16 +10,23 @@ import (
 const (
 	SwaggerDescriptionTagName   = "swagger-description"
 	SwaggerParametersInBody     = "body"
+	SwaggerParametersInQuery    = "query"
 	SwaggerParametersInFormData = "formData"
 	SwaggerParametersInPath     = "path"
+	SwaggerParametersInHeader   = "header"
+
+	SwaggerConsumeJSON              = "application/json"
+	SwaggerConsumeUrlEncoded        = "application/x-www-form-urlencoded"
+	SwaggerConsumeMultipartFormData = "multipart/form-data"
+	SwaggerProduceJSON              = "application/json"
 )
 
 func NewSwagger() *Swagger {
 	return &Swagger{
 		Swagger: "2.0",
 		Info: SwaggerInfo{
-			Title:   "",
-			Version: "",
+			Title:   "Swagger",
+			Version: "1.0",
 		},
 		tagName: "json",
 		Schemes: []string{
@@ -26,13 +34,10 @@ func NewSwagger() *Swagger {
 			"https",
 		},
 		Consumes: []string{
-			"application/json",
-			"multipart/form-data",
-			"application/x-www-form-urlencoded",
+			SwaggerConsumeUrlEncoded,
 		},
 		Produces: []string{
-			"application/json",
-			"application/x-www-form-urlencoded",
+			SwaggerProduceJSON,
 		},
 		Paths:       make(map[string]SwaggerPath, 0),
 		Definitions: make(map[string]SwaggerDefinition),
@@ -173,7 +178,7 @@ func (s *Swagger) buildParameters(in string, inType reflect.Type) []SwaggerParam
 			Name: in,
 			IN:   in,
 		}
-		param.Schema = SwaggerParameterSchema{
+		param.Schema = &SwaggerParameterSchema{
 			Ref: "#/definitions/" + s.getName(inType),
 		}
 		parameters = append(parameters, param)
@@ -184,14 +189,62 @@ func (s *Swagger) buildParameters(in string, inType reflect.Type) []SwaggerParam
 	num := inType.NumField()
 	for i := 0; i < num; i++ {
 		f := inType.Field(i)
+
 		name := f.Tag.Get(s.tagName)
 		if name == "" {
 			continue
 		}
 		name = strings.Split(name, ",")[0]
+
+		fieldType := f.Type
+		for fieldType.Kind() == reflect.Ptr {
+			fieldType = fieldType.Elem()
+		}
+
+		if fieldType.Kind() == reflect.Slice {
+			v := reflect.New(fieldType.Elem())
+			vType := v.Type()
+			if vType.Kind() == reflect.Ptr {
+				vType = vType.Elem()
+			}
+
+			isRequired := f.Tag.Get("swagger-required") == "true"
+			enum := f.Tag.Get("swagger-enum")
+			description := f.Tag.Get("swagger-description")
+			defaultValue := f.Tag.Get("swagger-default")
+			enums := make([]interface{}, 0)
+			fmt.Println("enum", enum)
+			if enum != "" {
+				tmp := strings.Split(enum, ",")
+				for _, tv := range tmp {
+					enums = append(enums, tv)
+				}
+			}
+			t, _ := s.formatType(vType)
+			param := SwaggerParameter{
+				Description: description,
+				Name:        name,
+				IN:          in,
+				Required:    isRequired,
+				Type:        "array",
+				Items: &SwaggerParameterItems{
+					Type:    t,
+					Enum:    enums,
+					Default: defaultValue,
+				},
+			}
+			parameters = append(parameters, param)
+			continue
+		}
+
+		isRequired := f.Tag.Get("swagger-required") == "true"
+		t, format := s.formatType(f.Type)
 		param := SwaggerParameter{
-			Name: name,
-			IN:   in,
+			Name:     name,
+			IN:       in,
+			Required: isRequired,
+			Type:     t,
+			Format:   format,
 		}
 		parameters = append(parameters, param)
 	}
@@ -278,8 +331,11 @@ func (s *Swagger) AddHandler(method string, path string, req reflect.Type, rsp r
 	method = strings.ToLower(method)
 	if _, ok := s.Paths[path]; ok {
 		s.Paths[path][method] = SwaggerPathEndpoint{
-			Summary: opts.Summary,
-			Tags:    opts.Tags,
+			Summary:     opts.Summary,
+			Description: opts.Description,
+			Tags:        opts.Tags,
+			Produces:    opts.Produces,
+			Consumes:    opts.Consumes,
 			Responses: map[string]SwaggerResponse{
 				"200": SwaggerResponse{
 					Description: "",
@@ -294,8 +350,11 @@ func (s *Swagger) AddHandler(method string, path string, req reflect.Type, rsp r
 	} else {
 		s.Paths[path] = SwaggerPath{
 			method: SwaggerPathEndpoint{
-				Summary: opts.Summary,
-				Tags:    opts.Tags,
+				Summary:     opts.Summary,
+				Description: opts.Description,
+				Tags:        opts.Tags,
+				Produces:    opts.Produces,
+				Consumes:    opts.Consumes,
 				Responses: map[string]SwaggerResponse{
 					"200": s.buildResponse(rsp),
 				},
@@ -305,6 +364,9 @@ func (s *Swagger) AddHandler(method string, path string, req reflect.Type, rsp r
 	}
 	if opts.ResponseWrapper != nil {
 		wrapperType := reflect.TypeOf(opts.ResponseWrapper)
+		for wrapperType.Kind() == reflect.Ptr {
+			wrapperType = wrapperType.Elem()
+		}
 		s.scanStruct(wrapperType)
 		wrapperRsp := s.buildResponse(wrapperType)
 
@@ -335,6 +397,7 @@ func (s *Swagger) getFieldByTagNameName(t reflect.Type, tagName string) (reflect
 
 type SwaggerInfoContact struct {
 	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
 type SwaggerInfo struct {
@@ -359,16 +422,32 @@ type SwaggerParameterSchema struct {
 }
 
 type SwaggerParameter struct {
-	Name     string                 `json:"name"`
-	IN       string                 `json:"in"`
-	Required bool                   `json:"required"`
-	Schema   SwaggerParameterSchema `json:"schema"`
+	Description string                  `json:"description"`
+	Name        string                  `json:"name"`
+	IN          string                  `json:"in"`
+	Required    bool                    `json:"required"`
+	Schema      *SwaggerParameterSchema `json:"schema,omitempty"`
+	Type        string                  `json:"type"`
+	Format      string                  `json:"format,omitempty"`
+	Items       *SwaggerParameterItems  `json:"items,omitempty"` // 当type是array的时候需要设置Items
+	Minimum     float64                 `json:"minimum,omitempty"`
+	Maximum     float64                 `json:"maximum,omitempty"`
 }
+
+type SwaggerParameterItems struct {
+	Type    string        `json:"type"`              // 类型
+	Default interface{}   `json:"default,omitempty"` // 默认值
+	Enum    []interface{} `json:"enum,omitempty"`    // 可使用的值
+}
+
 type SwaggerPathEndpoint struct {
-	Summary    string                     `json:"summary"`
-	Responses  map[string]SwaggerResponse `json:"responses"`
-	Parameters []SwaggerParameter         `json:"parameters"`
-	Tags       []string                   `json:"tags"`
+	Consumes    []string                   `json:"consumes"`
+	Produces    []string                   `json:"produces"`
+	Summary     string                     `json:"summary"`
+	Responses   map[string]SwaggerResponse `json:"responses"`
+	Parameters  []SwaggerParameter         `json:"parameters"`
+	Tags        []string                   `json:"tags"`
+	Description string                     `json:"description"`
 }
 type SwaggerPath map[string]SwaggerPathEndpoint
 
